@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Paper from '@mui/material/Paper';
 import BottomNavigation from '@mui/material/BottomNavigation';
 import BottomNavigationAction from '@mui/material/BottomNavigationAction';
@@ -6,11 +7,11 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 
 // Icons
-import RestoreIcon from '@mui/icons-material/Restore';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import ArchiveIcon from '@mui/icons-material/Archive';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import SettingsIcon from '@mui/icons-material/Settings';
+import HomeIcon from '@mui/icons-material/Home';
+import MessageIcon from '@mui/icons-material/Message';
+import NotificationsIcon from '@mui/icons-material/Notifications';
 
 // Custom Hook
 import { useSettingsMenu } from '../hooks/useSettingsMenu';
@@ -18,6 +19,12 @@ import { useSettingsMenu } from '../hooks/useSettingsMenu';
 export default function BottomNav() {
   const [value, setValue] = useState(0);
   const { anchorEl, openMenu, closeMenu } = useSettingsMenu();
+  const navigate = useNavigate();
+
+  const handleNavigation = (newValue, path) => {
+    setValue(newValue);
+    navigate(path);
+  };
 
   return (
     <>
@@ -30,9 +37,16 @@ export default function BottomNav() {
           value={value}
           onChange={(event, newValue) => setValue(newValue)}
         >
-          <BottomNavigationAction label="Recents" icon={<RestoreIcon />} />
-          <BottomNavigationAction label="Favorites" icon={<FavoriteIcon />} />
-          <BottomNavigationAction label="Archive" icon={<ArchiveIcon />} />
+          <BottomNavigationAction
+            label="Home"
+            icon={<HomeIcon />}
+            onClick={() => handleNavigation(0, '/')}
+          />
+          <BottomNavigationAction label="Messages" icon={<MessageIcon />} />
+          <BottomNavigationAction
+            label="Notifications"
+            icon={<NotificationsIcon />}
+          />
           <BottomNavigationAction
             label="Profile"
             icon={<AccountCircleIcon />}

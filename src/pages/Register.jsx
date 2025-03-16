@@ -121,6 +121,19 @@ export default function Register() {
           <Button variant="contained" color="primary" type="submit">
             Sign Up
           </Button>
+
+          {/* Login Section */}
+          <Typography variant="body2" color="textSecondary">
+            Already have an account?{' '}
+            <Button
+              color="primary"
+              href="/login"
+              sx={{ textTransform: 'none', fontSize: '0.85rem' }}
+              className="hover:underline"
+            >
+              Login
+            </Button>
+          </Typography>
         </Box>
       </Box>
     </Container>
