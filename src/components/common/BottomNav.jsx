@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Paper from '@mui/material/Paper';
 import BottomNavigation from '@mui/material/BottomNavigation';
 import BottomNavigationAction from '@mui/material/BottomNavigationAction';
@@ -14,7 +14,7 @@ import MessageIcon from '@mui/icons-material/Message';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 
 // Custom Hook
-import { useSettingsMenu } from '../hooks/useSettingsMenu';
+import { useSettingsMenu } from '../../hooks/useSettingsMenu';
 
 export default function BottomNav() {
   const [value, setValue] = useState(0);
@@ -68,8 +68,6 @@ export default function BottomNav() {
         transformOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
         <MenuItem onClick={closeMenu}>Account Settings</MenuItem>
-        <MenuItem onClick={closeMenu}>Privacy</MenuItem>
-        <MenuItem onClick={closeMenu}>Logout</MenuItem>
       </Menu>
     </>
   );
