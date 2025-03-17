@@ -1,17 +1,32 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Register from '../pages/Register';
 import Login from '../pages/Login';
 import NotFound from '../pages/NotFound';
 import Home from '../pages/Home';
+import { useContext } from 'react';
+import { AppContext } from '../Context/AppContext';
 
 export default function AppRoutes() {
+  const { user } = useContext(AppContext);
+
   return (
     <Routes>
-      {/* Guest Routes */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
       {/* Protected Route */}
-      <Route path="/" element={<Home />} />
+      <Route
+        path="/"
+        element={user ? <Home /> : <Navigate to="/login" replace />}
+      />
+
+      {/* Guest Routes */}
+      <Route
+        path="/login"
+        element={user ? <Navigate to="/" replace /> : <Login />}
+      />
+      <Route
+        path="/register"
+        element={user ? <Navigate to="/" replace /> : <Register />}
+      />
+
       {/* 404 Not Found */}
       <Route path="*" element={<NotFound />} />
     </Routes>
