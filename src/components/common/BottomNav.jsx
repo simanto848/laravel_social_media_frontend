@@ -77,6 +77,7 @@ export default function BottomNav() {
           <BottomNavigationAction
             label={user?.username || 'Profile'}
             icon={<AccountCircleIcon />}
+            onClick={() => handleNavigation(4, '/profile')}
           />
           <BottomNavigationAction
             label="More"
