@@ -7,6 +7,7 @@ import {
   InputAdornment,
   Typography,
   IconButton,
+  CircularProgress,
 } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import LockIcon from '@mui/icons-material/Lock';
@@ -15,7 +16,6 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { AppContext } from '../Context/AppContext';
-import LoadingOverlay from '../components/common/LoadingOverlay';
 import authService from '../services/authService';
 
 export default function Login() {
@@ -26,7 +26,7 @@ export default function Login() {
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const { setToken, setUser } = useContext(AppContext); // Fixed context destructuring
+  const { login } = useContext(AppContext); // Fixed context destructuring
   const navigate = useNavigate();
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
@@ -53,13 +53,11 @@ export default function Login() {
 
       if (response.status) {
         toast.success(response.message || 'Login successful!');
+        login(response.data.token, response.data.user);
         setFormData({
           username: '',
           password: '',
         });
-        localStorage.setItem('token', response.data.token);
-        setToken(response.data.token);
-        setUser(response.data.user);
         navigate('/');
       } else {
         toast.error(response.message || 'Login failed!');
@@ -83,7 +81,7 @@ export default function Login() {
         minHeight: '100vh',
       }}
     >
-      <LoadingOverlay open={isLoading} />
+      {isLoading && <CircularProgress color="success" />}
       <Box
         sx={{
           bgcolor: 'white',
@@ -170,7 +168,7 @@ export default function Login() {
             disabled={isLoading}
             type="submit"
           >
-            {isLoading ? 'Logging in...' : 'Login'}{' '}
+            {isLoading ? 'Logging in...' : 'Login'}
           </Button>
 
           <Typography variant="body2" color="textSecondary">

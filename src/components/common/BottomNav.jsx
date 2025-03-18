@@ -22,7 +22,7 @@ import { AppContext } from '../../Context/AppContext';
 export default function BottomNav() {
   const [value, setValue] = useState(0);
   const { anchorEl, openMenu, closeMenu } = useSettingsMenu();
-  const { user, setUser, setToken, token } = useContext(AppContext);
+  const { user, logout, token } = useContext(AppContext);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
 
@@ -37,9 +37,7 @@ export default function BottomNav() {
       const response = await authService.logout(token);
       if (response.status) {
         toast.success(response.message || 'Logged out successfully!');
-        localStorage.removeItem('token');
-        setToken(null);
-        setUser(null);
+        logout();
         navigate('/login');
       } else {
         toast.error(response.message || 'Logout failed!');
