@@ -7,10 +7,12 @@ import {
   InputAdornment,
   Typography,
   IconButton,
+  MenuItem,
 } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
 import LockIcon from '@mui/icons-material/Lock';
+import BadgeIcon from '@mui/icons-material/Badge';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { toast } from 'react-hot-toast';
@@ -30,9 +32,13 @@ export default function Register() {
   // Form Data
   const [formData, setFormData] = useState({
     username: '',
+    first_name: '',
+    last_name: '',
     email: '',
     password: '',
     password_confirmation: '',
+    gender: '',
+    dob: '',
   });
 
   // Toggle password visibility
@@ -49,17 +55,7 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Client-side validation
-    if (
-      !formData.username ||
-      !formData.email ||
-      !formData.password ||
-      !formData.password_confirmation
-    ) {
-      toast.error('All fields are required');
-      return;
-    }
-
+    // Client-side validation for password match
     if (formData.password !== formData.password_confirmation) {
       toast.error('Passwords do not match');
       return;
@@ -74,17 +70,22 @@ export default function Register() {
         toast.success(response.message || 'Registration successful!');
         setFormData({
           username: '',
+          first_name: '',
+          last_name: '',
           email: '',
           password: '',
           password_confirmation: '',
+          gender: '',
+          dob: '',
         });
         localStorage.setItem('token', response.data.token);
         setToken(response.data.token);
         setUser(response.data.user);
         navigate('/');
       } else {
-        toast.error(response.message || 'Registration failed!');
-        setErrors(response.error || {});
+        // If there are errors, display them one by one
+        const errorObj = response.errors || {};
+        setErrors(errorObj);
       }
     } catch (error) {
       toast.error('Something went wrong. Please try again later.');
@@ -142,6 +143,40 @@ export default function Register() {
             }}
           />
           <TextField
+            name="first_name"
+            label="First Name"
+            variant="outlined"
+            fullWidth
+            value={formData.first_name}
+            onChange={handleChange}
+            error={!!errors.first_name}
+            helperText={errors.first_name}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <BadgeIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <TextField
+            name="last_name"
+            label="Last Name"
+            variant="outlined"
+            fullWidth
+            value={formData.last_name}
+            onChange={handleChange}
+            error={!!errors.last_name}
+            helperText={errors.last_name}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <BadgeIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <TextField
             name="email"
             label="Email"
             variant="outlined"
@@ -158,6 +193,34 @@ export default function Register() {
               ),
             }}
           />
+          <TextField
+            name="gender"
+            label="Gender"
+            variant="outlined"
+            fullWidth
+            select
+            value={formData.gender}
+            onChange={handleChange}
+            error={!!errors.gender}
+            helperText={errors.gender}
+          >
+            <MenuItem value="male">Male</MenuItem>
+            <MenuItem value="female">Female</MenuItem>
+            <MenuItem value="other">Other</MenuItem>
+          </TextField>
+          <TextField
+            name="dob"
+            label="Date of Birth"
+            type="date"
+            variant="outlined"
+            fullWidth
+            value={formData.dob}
+            onChange={handleChange}
+            error={!!errors.dob}
+            helperText={errors.dob}
+            InputLabelProps={{ shrink: true }}
+          />
+
           <TextField
             name="password"
             label="Password"

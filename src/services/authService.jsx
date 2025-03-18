@@ -5,7 +5,6 @@ const register = async (formData) => {
       body: JSON.stringify(formData),
     });
     const data = await response.json();
-    console.log('RESPONSE: ', data);
 
     return data;
   } catch (error) {
