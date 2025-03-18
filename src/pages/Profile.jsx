@@ -1,23 +1,37 @@
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Container, Box, Typography } from '@mui/material';
+import { toast } from 'react-hot-toast';
 import ProfileCard from '../components/profile/ProfileCard';
 import ProfileForm from '../components/profile/ProfileForm';
 import ProfileImageUpload from '../components/profile/ProfileImageUpload';
 import PasswordForm from '../components/profile/PasswordForm';
 import ProfileNameForm from '../components/profile/ProfileNameForm';
+import profileService from '../services/profileServices';
+import { AppContext } from '../Context/AppContext';
 
 export default function Profile() {
-  const [user, setUser] = useState({
-    username: 'john_doe',
-    email: 'john.doe@example.com',
-    bio: 'A passionate developer and explorer!',
-    profilePicture: 'https://via.placeholder.com/150',
-    createdAt: '2023-01-15',
-  });
+  const [profileData, setProfileData] = useState({});
+  const { user } = useContext(AppContext);
+  const [error, setError] = useState(null);
+
+  const fetchProfile = async () => {
+    const userProfileData = await profileService.getProfile();
+    if (userProfileData.status) {
+      console.log('USER DATA => ', userProfileData.data.data);
+
+      setProfileData(userProfileData.data.data);
+    } else {
+      setError(userProfileData.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
 
   // Handle profile updates
   const handleProfileUpdate = (updatedData) => {
-    setUser({ ...user, ...updatedData });
+    setProfileData({ ...profileData, ...updatedData });
     console.log('Profile updated:', updatedData);
     // In a real app, this would make an API call to update the profile
   };
@@ -33,10 +47,11 @@ export default function Profile() {
       <Typography variant="h4" sx={{ mb: 4, textAlign: 'center' }}>
         Profile
       </Typography>
+      {error && toast.error(error)}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         <ProfileCard user={user} />
-        <ProfileNameForm />
-        <ProfileForm user={user} onUpdate={handleProfileUpdate} />
+        <ProfileNameForm data={profileData} />
+        <ProfileForm user={profileData} onUpdate={handleProfileUpdate} />
         <PasswordForm />
         <ProfileImageUpload onUpload={handleImageUpload} />
       </Box>

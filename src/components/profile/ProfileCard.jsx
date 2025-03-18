@@ -26,7 +26,7 @@ export default function ProfileCard({ user }) {
             Email: {user.email}
           </Typography>
           <Typography variant="body2" color="textSecondary">
-            Joined: {new Date(user.createdAt).toLocaleDateString()}
+            Joined: {new Date(user.created_at).toLocaleDateString()}
           </Typography>
         </Box>
       </CardContent>

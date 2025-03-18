@@ -1,7 +1,7 @@
 import { Box, Button, TextField, Typography } from '@mui/material';
 import React from 'react';
 
-export default function ProfileNameForm() {
+export default function ProfileNameForm({ data }) {
   return (
     <Box>
       <Typography variant="h6" sx={{ mb: 2 }}>
@@ -10,6 +10,7 @@ export default function ProfileNameForm() {
       <TextField
         name="first_name"
         label="First Name"
+        value={data.first_name || ''}
         sx={{ mb: 2 }}
         rows={3}
         fullWidth
@@ -17,6 +18,7 @@ export default function ProfileNameForm() {
       <TextField
         name="last_name"
         label="Last Name"
+        value={data.last_name || ''}
         sx={{ mb: 2 }}
         rows={3}
         fullWidth
