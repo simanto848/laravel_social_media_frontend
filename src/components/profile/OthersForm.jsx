@@ -1,150 +1,127 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Button,
-  CircularProgress,
-  MenuItem,
   TextField,
+  Button,
   Typography,
+  MenuItem,
+  Grid,
+  CircularProgress,
 } from '@mui/material';
 import profileService from '../../services/profileServices';
-import toast from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 
 export default function OthersForm({ data, onSubmit }) {
   const [formData, setFormData] = useState({
-    phone_number: '',
-    bio: '',
-    dob: '',
-    gender: '',
+    bio: data?.bio || '',
+    phone_number: data?.phone_number || '',
+    gender: data?.gender || 'other',
+    dob: data?.dob || '',
   });
-  const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
+  // Update form data when the data prop changes
   useEffect(() => {
-    if (data) {
-      setFormData({
-        phone_number: data.phone_number || '',
-        bio: data.bio || '',
-        dob: data.dob || '',
-        gender: data.gender || '',
-      });
-    }
+    setFormData({
+      bio: data?.bio || '',
+      phone_number: data?.phone_number || '',
+      gender: data?.gender || 'other',
+      dob: data?.dob || '',
+    });
   }, [data]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-    setErrors({ ...errors, [name]: '' });
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
+    setLoading(true);
 
     try {
       const response = await profileService.updateOthers(formData);
+
       if (response.status) {
-        toast.success(response.message || 'Details updated successfully!');
-        setErrors({});
-        // Pass the updated data to the parent
-        if (onSubmit) {
-          onSubmit(formData);
-        }
+        onSubmit(formData);
+        toast.success('Profile details updated successfully');
       } else {
-        // Handle field-specific errors if the backend returns them
-        if (response.error && typeof response.error === 'object') {
-          setErrors(response.error);
-        } else {
-          setErrors({
-            general: response.message || 'Failed to update details.',
-          });
-        }
-        toast.error(response.message || 'Failed to update details.');
+        toast.error(response.message || 'Failed to update profile details');
       }
     } catch (error) {
-      toast.error('Something went wrong');
-      console.error('Update Others Error:', error);
-      setErrors({ general: 'Something went wrong. Please try again.' });
+      toast.error('An error occurred while updating profile details');
+      console.error(error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <Box>
-      <Typography variant="h6" sx={{ mb: 2, mt: 2 }}>
-        Update Others
+    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 4 }}>
+      <Typography variant="h6" sx={{ mb: 2 }}>
+        Additional Information
       </Typography>
-      <form onSubmit={handleSubmit}>
-        {isLoading && <CircularProgress size={24} sx={{ mb: 2 }} />}
-        {errors.general && (
-          <Typography color="error" sx={{ mb: 2 }}>
-            {errors.general}
-          </Typography>
-        )}
-        <TextField
-          name="phone_number"
-          label="Phone Number"
-          value={formData.phone_number}
-          onChange={handleChange}
-          sx={{ mb: 2 }}
-          fullWidth
-          variant="outlined"
-          error={!!errors.phone_number}
-          helperText={errors.phone_number}
-        />
-        <TextField
-          name="bio"
-          label="Bio"
-          value={formData.bio}
-          onChange={handleChange}
-          sx={{ mb: 2 }}
-          fullWidth
-          variant="outlined"
-          multiline
-          rows={3}
-          error={!!errors.bio}
-          helperText={errors.bio}
-        />
-        <TextField
-          name="gender"
-          label="Gender"
-          variant="outlined"
-          sx={{ mb: 2 }}
-          fullWidth
-          select
-          value={formData.gender}
-          onChange={handleChange}
-          error={!!errors.gender}
-          helperText={errors.gender}
-        >
-          <MenuItem value="">Select Gender</MenuItem>
-          <MenuItem value="male">Male</MenuItem>
-          <MenuItem value="female">Female</MenuItem>
-          <MenuItem value="other">Other</MenuItem>
-        </TextField>
-        <TextField
-          name="dob"
-          label="Date of Birth"
-          type="date"
-          variant="outlined"
-          value={formData.dob || ''}
-          sx={{ mb: 2 }}
-          fullWidth
-          onChange={handleChange}
-          InputLabelProps={{ shrink: true }}
-          error={!!errors.dob}
-          helperText={errors.dob}
-        />
-        <Button
-          type="submit"
-          variant="outlined"
-          color="primary"
-          disabled={isLoading}
-        >
-          {isLoading ? 'Updating' : 'Update'}
-        </Button>
-      </form>
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <TextField
+            label="Bio"
+            name="bio"
+            value={formData.bio}
+            onChange={handleChange}
+            fullWidth
+            multiline
+            rows={3}
+            sx={{ mb: 2 }}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Phone Number"
+            name="phone_number"
+            value={formData.phone_number}
+            onChange={handleChange}
+            fullWidth
+            sx={{ mb: 2 }}
+            placeholder="+123456789"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            select
+            label="Gender"
+            name="gender"
+            value={formData.gender}
+            onChange={handleChange}
+            fullWidth
+            sx={{ mb: 2 }}
+          >
+            <MenuItem value="male">Male</MenuItem>
+            <MenuItem value="female">Female</MenuItem>
+            <MenuItem value="other">Other</MenuItem>
+          </TextField>
+        </Grid>
+        <Grid item xs={12}>
+          <TextField
+            label="Date of Birth"
+            name="dob"
+            type="date"
+            value={formData.dob}
+            onChange={handleChange}
+            fullWidth
+            InputLabelProps={{ shrink: true }}
+            sx={{ mb: 2 }}
+          />
+        </Grid>
+      </Grid>
+      <Button
+        type="submit"
+        variant="outlined"
+        color="primary"
+        disabled={loading}
+        sx={{ mt: 2 }}
+      >
+        {loading ? <CircularProgress size={24} /> : 'Save Changes'}
+      </Button>
     </Box>
   );
 }

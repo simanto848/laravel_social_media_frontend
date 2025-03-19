@@ -1,49 +1,55 @@
-import React, { useState } from 'react';
-import { Box, TextField, Button, Typography } from '@mui/material';
+import React from 'react';
+import { Box, TextField, MenuItem } from '@mui/material';
 
-export default function ProfileForm({ user, onUpdate }) {
-  const [formData, setFormData] = useState({
-    bio: user.bio || '',
-    email: user.email || '',
-  });
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onUpdate(formData); // Pass the updated data to the parent
-  };
-
+export default function ProfileForm({ user, onChange, isLoading }) {
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ mb: 3 }}>
-      <Typography variant="h6" sx={{ mb: 2 }}>
-        Edit Profile
-      </Typography>
+    <Box sx={{ mb: 3 }}>
       <TextField
         label="Bio"
         name="bio"
-        value={formData.bio}
-        onChange={handleChange}
+        value={user.bio || ''}
+        onChange={onChange}
         fullWidth
         multiline
         rows={3}
         sx={{ mb: 2 }}
+        disabled={isLoading}
       />
       <TextField
-        label="Email"
-        name="email"
-        type="email"
-        value={formData.email}
-        onChange={handleChange}
+        label="Phone Number"
+        name="phone_number"
+        value={user.phone_number || ''}
+        onChange={onChange}
         fullWidth
         sx={{ mb: 2 }}
+        disabled={isLoading}
+        placeholder="+123456789"
       />
-      <Button type="submit" variant="outlined" color="primary">
-        Save Changes
-      </Button>
+      <TextField
+        select
+        label="Gender"
+        name="gender"
+        value={user.gender || 'other'}
+        onChange={onChange}
+        fullWidth
+        sx={{ mb: 2 }}
+        disabled={isLoading}
+      >
+        <MenuItem value="male">Male</MenuItem>
+        <MenuItem value="female">Female</MenuItem>
+        <MenuItem value="other">Other</MenuItem>
+      </TextField>
+      <TextField
+        label="Date of Birth"
+        name="dob"
+        type="date"
+        value={user.dob || ''}
+        onChange={onChange}
+        fullWidth
+        InputLabelProps={{ shrink: true }}
+        sx={{ mb: 2 }}
+        disabled={isLoading}
+      />
     </Box>
   );
 }
