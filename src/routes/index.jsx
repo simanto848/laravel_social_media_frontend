@@ -24,10 +24,10 @@ export default function AppRoutes() {
         element={user ? <Profile /> : <Navigate to="/login" replace />}
       />
 
-      <Route
+      {/* <Route
         path="/profile/posts"
         element={user ? <Posts /> : <Navigate to={'/login'} replace />}
-      />
+      /> */}
 
       {/* Guest Routes */}
       <Route
