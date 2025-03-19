@@ -34,6 +34,25 @@ const profileService = {
     }
   },
 
+  async updateOthers(data) {
+    try {
+      const response = await fetch(`/api/profile/details`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify(data),
+      });
+      const result = await response.json();
+      return response.ok
+        ? { status: true, data: result }
+        : { status: false, message: result.message };
+    } catch (error) {
+      return { status: false, message: 'Network error', error: error.message };
+    }
+  },
+
   async updateProfile(data) {
     try {
       const response = await fetch(`/api/profile/details`, {

@@ -1,12 +1,20 @@
-// components/profile/AboutMe.jsx
 import React from 'react';
-import { Typography, Box } from '@mui/material';
+import { Box } from '@mui/material';
 import ProfileNameForm from './ProfileNameForm';
+import OthersForm from './OthersForm';
 
-export default function AboutMe({ profile }) {
+export default function AboutMe({ profile, onUpdate }) {
+  // Pass the updated data to the parent
+  const handleUpdate = (updatedData) => {
+    if (onUpdate) {
+      onUpdate(updatedData);
+    }
+  };
+
   return (
     <Box sx={{ p: 2 }}>
-      <ProfileNameForm data={profile} />
+      <ProfileNameForm data={profile} onSubmit={handleUpdate} />
+      <OthersForm data={profile} onSubmit={handleUpdate} />
     </Box>
   );
 }

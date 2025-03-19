@@ -1,14 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import {
-  Container,
-  Box,
-  Typography,
-  AppBar,
-  Menu,
-  MenuItem,
-  Tab,
-  Tabs,
-} from '@mui/material';
+import { Container, Box, Typography, AppBar, Tabs, Tab } from '@mui/material';
 import { toast } from 'react-hot-toast';
 import ProfileCard from '../components/profile/ProfileCard';
 import profileService from '../services/profileServices';
@@ -73,8 +64,6 @@ export default function Profile() {
   const fetchProfile = async () => {
     const userProfileData = await profileService.getProfile();
     if (userProfileData.status) {
-      console.log('USER DATA => ', userProfileData.data.data);
-
       setProfileData(userProfileData.data.data);
     } else {
       setError(userProfileData.message);
@@ -85,15 +74,24 @@ export default function Profile() {
     fetchProfile();
   }, []);
 
-  // Handle profile picture upload
-  // const handleImageUpload = (file) => {
-  //   console.log('Profile picture uploaded:', file);
-  // };
+  const handleImageUpload = (file) => {
+    console.log('Profile picture uploaded:', file);
+  };
+
+  const handleProfileUpdate = (updatedData) => {
+    setProfileData({ ...profileData, ...updatedData });
+  };
+
+  const handleTabChange = (e, newValue) => {
+    setActiveTab(newValue);
+  };
 
   const tabs = [
     {
       label: 'About Me',
-      component: () => <AboutMe profile={profileData} />,
+      component: () => (
+        <AboutMe profile={profileData} onUpdate={handleProfileUpdate} />
+      ),
     },
     {
       label: 'Timeline',
@@ -125,13 +123,12 @@ export default function Profile() {
       </Typography>
       {error && toast.error(error)}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        <ProfileCard user={user} />
-        {/* Desktop Tabs - Hidden on mobile */}
+        <ProfileCard user={user} onChangeProfilePicture={handleImageUpload} />
         <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 2 }}>
           <Tabs
             sx={{ display: { xs: 'none', md: 'flex' } }}
             value={activeTab}
-            onChange={(e, newValue) => setActiveTab(newValue)}
+            onChange={handleTabChange}
             aria-label="profile tabs"
           >
             {tabs.map((tab, index) => (
@@ -140,7 +137,6 @@ export default function Profile() {
           </Tabs>
         </Box>
         {renderTabContent()}
-        {/* <ProfileImageUpload onUpload={handleImageUpload} /> */}
       </Box>
     </Container>
   );
