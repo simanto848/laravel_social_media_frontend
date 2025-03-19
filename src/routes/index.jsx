@@ -6,6 +6,7 @@ import Home from '../pages/Home';
 import { useContext } from 'react';
 import { AppContext } from '../Context/AppContext';
 import Profile from '../pages/Profile';
+import Posts from '../pages/post/Posts';
 
 export default function AppRoutes() {
   const { user } = useContext(AppContext);
@@ -21,6 +22,11 @@ export default function AppRoutes() {
       <Route
         path="/profile"
         element={user ? <Profile /> : <Navigate to="/login" replace />}
+      />
+
+      <Route
+        path="/profile/posts"
+        element={user ? <Posts /> : <Navigate to={'/login'} replace />}
       />
 
       {/* Guest Routes */}

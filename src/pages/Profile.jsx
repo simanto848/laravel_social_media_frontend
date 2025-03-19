@@ -1,5 +1,14 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Container, Box, Typography } from '@mui/material';
+import {
+  Container,
+  Box,
+  Typography,
+  AppBar,
+  Menu,
+  MenuItem,
+  Tab,
+  Tabs,
+} from '@mui/material';
 import { toast } from 'react-hot-toast';
 import ProfileCard from '../components/profile/ProfileCard';
 import ProfileForm from '../components/profile/ProfileForm';
@@ -50,6 +59,15 @@ export default function Profile() {
       {error && toast.error(error)}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         <ProfileCard user={user} />
+        {/* Desktop Tabs - Hidden on mobile */}
+        <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 2 }}>
+          <Tabs sx={{ display: { xs: 'none', md: 'flex' } }} value={1}>
+            <Tab label="About Me" />
+            <Tab label="Timeline" href="/profile/posts" />
+            <Tab label="Photos" />
+            <Tab label="Friends" />
+          </Tabs>
+        </Box>
         <ProfileNameForm data={profileData} />
         <ProfileForm user={profileData} onUpdate={handleProfileUpdate} />
         <PasswordForm />
