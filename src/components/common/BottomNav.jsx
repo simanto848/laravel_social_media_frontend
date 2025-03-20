@@ -1,5 +1,5 @@
-import React, { useContext, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useContext, useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Paper from '@mui/material/Paper';
 import BottomNavigation from '@mui/material/BottomNavigation';
 import BottomNavigationAction from '@mui/material/BottomNavigationAction';
@@ -25,6 +25,17 @@ export default function BottomNav() {
   const { user, logout, token } = useContext(AppContext);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Update the active tab based on current location
+  useEffect(() => {
+    const path = location.pathname;
+    if (path === '/') setValue(0);
+    else if (path === '/messages') setValue(1);
+    else if (path === '/notifications') setValue(2);
+    else if (path === '/profile') setValue(3);
+    else if (path === '/account') setValue(4);
+  }, [location]);
 
   const handleNavigation = (newValue, path) => {
     setValue(newValue);
@@ -54,7 +65,13 @@ export default function BottomNav() {
   return (
     <>
       <Paper
-        sx={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}
+        sx={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1000, // Add high z-index
+        }}
         elevation={3}
       >
         <BottomNavigation
@@ -67,15 +84,20 @@ export default function BottomNav() {
             icon={<HomeIcon />}
             onClick={() => handleNavigation(0, '/')}
           />
-          <BottomNavigationAction label="Messages" icon={<MessageIcon />} />
+          <BottomNavigationAction
+            label="Messages"
+            icon={<MessageIcon />}
+            onClick={() => handleNavigation(1, '/messages')}
+          />
           <BottomNavigationAction
             label="Notifications"
             icon={<NotificationsIcon />}
+            onClick={() => handleNavigation(2, '/notifications')}
           />
           <BottomNavigationAction
             label={user?.username || 'Profile'}
             icon={<AccountCircleIcon />}
-            onClick={() => handleNavigation(4, '/profile')}
+            onClick={() => handleNavigation(3, '/profile')}
           />
           <BottomNavigationAction
             label="More"
@@ -93,7 +115,14 @@ export default function BottomNav() {
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
         transformOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <MenuItem onClick={closeMenu}>Account Settings</MenuItem>
+        <MenuItem
+          onClick={() => {
+            closeMenu();
+            handleNavigation(4, '/account');
+          }}
+        >
+          Account Settings
+        </MenuItem>
         <MenuItem onClick={handleLogout} disabled={isLoggingOut}>
           {isLoggingOut ? 'Logging out...' : 'Logout'}
         </MenuItem>

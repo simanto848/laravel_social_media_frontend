@@ -109,6 +109,41 @@ const profileService = {
       return { status: false, message: 'Network error', error: error.message };
     }
   },
+
+  async deactivateAccount() {
+    try {
+      const response = await fetch(`/api/profile/deactivate`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      const result = await response.json();
+      return response.ok
+        ? { status: true, data: result }
+        : { status: false, message: result.message };
+    } catch (error) {
+      return { status: false, message: 'Network error', error: error.message };
+    }
+  },
+
+  async deleteAccount() {
+    try {
+      const response = await fetch(`/api/profile`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      const result = await response.json();
+      return response.ok
+        ? { status: true, data: result }
+        : { status: false, message: result.message };
+    } catch (error) {
+      return { status: false, message: 'Network error', error: error.message };
+    }
+  },
 };
 
 export default profileService;
