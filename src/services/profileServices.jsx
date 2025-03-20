@@ -110,6 +110,7 @@ const profileService = {
     }
   },
 
+  // Not implemented in the backend
   async deactivateAccount() {
     try {
       const response = await fetch(`/api/profile/deactivate`, {
@@ -130,7 +131,7 @@ const profileService = {
 
   async deleteAccount() {
     try {
-      const response = await fetch(`/api/profile`, {
+      const response = await fetch(`api/profile/user`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,

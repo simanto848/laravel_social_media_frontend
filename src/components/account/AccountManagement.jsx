@@ -48,8 +48,8 @@ const AccountManagement = ({ logout }) => {
       const response = await profileService.deleteAccount();
       if (response.status) {
         toast.success('Account deleted successfully');
-        logout();
         navigate('/login');
+        logout();
       } else {
         toast.error(response.message || 'Failed to delete account');
       }
