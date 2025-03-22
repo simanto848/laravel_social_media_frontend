@@ -56,7 +56,6 @@ const staticPosts = [
     id: 2,
     author: { username: 'jane_smith' },
     content: 'Just finished a new painting! 🎨',
-    image: postPic,
     createdAt: '2025-03-18T12:00:00Z',
     likes: 8,
     likedByUser: true,
@@ -78,14 +77,13 @@ export default function Profile() {
   const [profilePicUrl, setProfilePicUrl] = useState(null);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openImageUpload, setOpenImageUpload] = useState(false);
+  const [profileImageUpdated, setProfileImageUpdated] = useState(false); // New boolean flag
 
   const fetchProfile = async () => {
     const userProfileData = await profileService.getProfile();
     if (userProfileData.status) {
       const profile = userProfileData.data.data;
       setProfileData(profile);
-
-      // Construct the full URL for the profile image
       if (profile.image && profile.image.path) {
         const imageUrl = `http://localhost:8000/storage/${profile.image.path}`;
         setProfilePicUrl(imageUrl);
@@ -97,12 +95,11 @@ export default function Profile() {
 
   useEffect(() => {
     fetchProfile();
-  }, []);
+  }, [profileImageUpdated]); // Add profileImageUpdated as a dependency
 
   const handleProfileUpdate = async (updatedData) => {
     try {
       setProfileData({ ...profileData, ...updatedData });
-
       if (updatedData.first_name || updatedData.last_name) {
         setUser((prev) => ({
           ...prev,
@@ -110,13 +107,16 @@ export default function Profile() {
           last_name: updatedData.last_name || prev.last_name,
         }));
       }
-
       toast.success('Profile updated successfully');
       setOpenEditModal(false);
     } catch (error) {
       toast.error('Failed to update profile');
       console.error('Error updating profile:', error);
     }
+  };
+
+  const handleProfileImageChange = () => {
+    setProfileImageUpdated((prev) => !prev); // Toggle the boolean to trigger useEffect
   };
 
   const handleTabChange = (e, newValue) => {
@@ -132,14 +132,13 @@ export default function Profile() {
     setOpenEditModal(false);
   };
 
-  // New handlers for image upload
   const handleOpenImageUpload = () => {
     setOpenImageUpload(true);
   };
 
   const handleCloseImageUpload = () => {
     setOpenImageUpload(false);
-    fetchProfile(); // Refresh profile data after closing to get the new image
+    fetchProfile();
   };
 
   const tabs = [
@@ -162,7 +161,9 @@ export default function Profile() {
     },
     {
       label: 'Photos',
-      component: () => <Photos />,
+      component: () => (
+        <Photos profileImageUpdated={handleProfileImageChange} />
+      ),
     },
     {
       label: 'Friends',
@@ -175,7 +176,6 @@ export default function Profile() {
   return (
     <Box sx={{ bgcolor: '#f0f2f5', minHeight: '100vh', pt: 2 }}>
       <Container maxWidth="md" disableGutters>
-        {/* Cover Photo Section */}
         <Paper
           sx={{
             position: 'relative',
@@ -185,7 +185,6 @@ export default function Profile() {
             boxShadow: 1,
           }}
         >
-          {/* Cover Photo */}
           <Box
             sx={{
               height: 250,
@@ -212,7 +211,6 @@ export default function Profile() {
             </Button>
           </Box>
 
-          {/* Profile Picture and Name Section */}
           <Box
             sx={{
               display: 'flex',
@@ -224,7 +222,6 @@ export default function Profile() {
               mt: { xs: -8, sm: -5 },
             }}
           >
-            {/* Profile Picture */}
             <Box sx={{ position: 'relative' }}>
               <Avatar
                 src={profilePicUrl}
@@ -256,7 +253,6 @@ export default function Profile() {
               </Button>
             </Box>
 
-            {/* Name and Info */}
             <Box
               sx={{
                 ml: { xs: 0, sm: 3 },
@@ -274,7 +270,6 @@ export default function Profile() {
               </Typography>
             </Box>
 
-            {/* Edit Profile Button */}
             <Button
               variant="contained"
               startIcon={<EditIcon />}
@@ -293,7 +288,6 @@ export default function Profile() {
 
           <Divider />
 
-          {/* Navigation Tabs */}
           <Tabs
             value={activeTab}
             onChange={handleTabChange}
@@ -323,13 +317,11 @@ export default function Profile() {
           </Tabs>
         </Paper>
 
-        {/* Tab Content */}
         <Paper sx={{ p: 3, borderRadius: '8px', boxShadow: 1, mb: 3 }}>
           {renderTabContent()}
         </Paper>
       </Container>
 
-      {/* Edit Profile Modal */}
       <ProfileEditModal
         open={openEditModal}
         onClose={handleCloseEditModal}
@@ -337,7 +329,6 @@ export default function Profile() {
         userData={user}
         onUpdate={handleProfileUpdate}
       />
-      {/* Image Upload Dialog */}
       <Dialog
         open={openImageUpload}
         onClose={handleCloseImageUpload}
