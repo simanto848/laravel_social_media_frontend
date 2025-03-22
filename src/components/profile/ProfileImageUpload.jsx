@@ -52,7 +52,7 @@ export default function ProfileImageUpload({ currentImage }) {
         toast.error(response.message || 'Failed to upload image');
       }
     } catch (error) {
-      toast.error(error || 'Failed to upload image');
+      toast.error(error.message || 'Failed to upload image');
     } finally {
       setUploading(false);
     }

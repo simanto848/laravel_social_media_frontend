@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState, useRef } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   Container,
   Box,
@@ -18,7 +18,6 @@ import { toast } from 'react-hot-toast';
 
 import profileService from '../services/profileServices';
 import { AppContext } from '../Context/AppContext';
-import avatarPic from '../assets/male_4.png';
 import { getRandomCoverGradient } from '../assets/cover_photo.js';
 import postPic from '../assets/female_avatar_2.png';
 import AboutMe from '../components/profile/AboutMe';
@@ -27,11 +26,12 @@ import PostCard from '../components/post/PostCard';
 import Photos from '../components/profile/Photos';
 import Friends from '../components/profile/Friends';
 import ProfileEditModal from '../components/profile/ProfileEditModal';
+import ProfileImageUpload from '../components/profile/ProfileImageUpload.jsx';
 
 const staticPosts = [
   {
     id: 1,
-    author: { username: 'john_doe', avatar: avatarPic },
+    author: { username: 'john_doe' },
     content: 'Having a great day at the beach! 🌊',
     image: postPic,
     createdAt: '2025-03-18T10:00:00Z',
@@ -54,7 +54,7 @@ const staticPosts = [
   },
   {
     id: 2,
-    author: { username: 'jane_smith', avatar: avatarPic },
+    author: { username: 'jane_smith' },
     content: 'Just finished a new painting! 🎨',
     image: postPic,
     createdAt: '2025-03-18T12:00:00Z',
@@ -74,17 +74,24 @@ const staticPosts = [
 export default function Profile() {
   const [profileData, setProfileData] = useState({});
   const { user, setUser } = useContext(AppContext);
-  const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
-  const [profilePic, setProfilePic] = useState(user?.profile_pic || avatarPic);
+  const [profilePicUrl, setProfilePicUrl] = useState(null);
   const [openEditModal, setOpenEditModal] = useState(false);
+  const [openImageUpload, setOpenImageUpload] = useState(false);
 
   const fetchProfile = async () => {
     const userProfileData = await profileService.getProfile();
     if (userProfileData.status) {
-      setProfileData(userProfileData.data.data);
+      const profile = userProfileData.data.data;
+      setProfileData(profile);
+
+      // Construct the full URL for the profile image
+      if (profile.image && profile.image.path) {
+        const imageUrl = `http://localhost:8000/storage/${profile.image.path}`;
+        setProfilePicUrl(imageUrl);
+      }
     } else {
-      setError(userProfileData.message);
+      toast.error(userProfileData.message);
     }
   };
 
@@ -104,7 +111,6 @@ export default function Profile() {
         }));
       }
 
-      // Show success message
       toast.success('Profile updated successfully');
       setOpenEditModal(false);
     } catch (error) {
@@ -118,12 +124,22 @@ export default function Profile() {
   };
 
   const handleEditProfileClick = () => {
-    fetchProfile(); // Fetch fresh data before opening modal
+    fetchProfile();
     setOpenEditModal(true);
   };
 
   const handleCloseEditModal = () => {
     setOpenEditModal(false);
+  };
+
+  // New handlers for image upload
+  const handleOpenImageUpload = () => {
+    setOpenImageUpload(true);
+  };
+
+  const handleCloseImageUpload = () => {
+    setOpenImageUpload(false);
+    fetchProfile(); // Refresh profile data after closing to get the new image
   };
 
   const tabs = [
@@ -211,8 +227,8 @@ export default function Profile() {
             {/* Profile Picture */}
             <Box sx={{ position: 'relative' }}>
               <Avatar
-                src={profilePic}
-                alt={user.username}
+                src={profilePicUrl}
+                alt={`${profileData.first_name} ${profileData.last_name}`}
                 sx={{
                   width: { xs: 120, sm: 168 },
                   height: { xs: 120, sm: 168 },
@@ -223,6 +239,7 @@ export default function Profile() {
               <Button
                 variant="contained"
                 size="small"
+                onClick={handleOpenImageUpload}
                 sx={{
                   position: 'absolute',
                   bottom: 5,
@@ -250,7 +267,7 @@ export default function Profile() {
               }}
             >
               <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-                {user.first_name} {user.last_name}
+                {profileData.first_name} {profileData.last_name}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                 {profileData.bio || 'No bio available'}
@@ -320,6 +337,17 @@ export default function Profile() {
         userData={user}
         onUpdate={handleProfileUpdate}
       />
+      {/* Image Upload Dialog */}
+      <Dialog
+        open={openImageUpload}
+        onClose={handleCloseImageUpload}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogContent>
+          <ProfileImageUpload currentImage={profilePicUrl} />
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 }
