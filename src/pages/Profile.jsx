@@ -12,22 +12,20 @@ import {
   Dialog,
   DialogContent,
 } from '@mui/material';
+import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import EditIcon from '@mui/icons-material/Edit';
 import { toast } from 'react-hot-toast';
+
 import profileService from '../services/profileServices';
 import { AppContext } from '../Context/AppContext';
 import avatarPic from '../assets/male_4.png';
-import {
-  coverPhotoGradient,
-  getRandomCoverGradient,
-} from '../assets/cover_photo.js';
+import { getRandomCoverGradient } from '../assets/cover_photo.js';
 import postPic from '../assets/female_avatar_2.png';
 import AboutMe from '../components/profile/AboutMe';
 import PostForm from '../components/post/PostForm';
 import PostCard from '../components/post/PostCard';
 import Photos from '../components/profile/Photos';
 import Friends from '../components/profile/Friends';
-import CameraAltIcon from '@mui/icons-material/CameraAlt';
-import EditIcon from '@mui/icons-material/Edit';
 import ProfileEditModal from '../components/profile/ProfileEditModal';
 
 const staticPosts = [
@@ -77,14 +75,9 @@ export default function Profile() {
   const [profileData, setProfileData] = useState({});
   const { user, setUser } = useContext(AppContext);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState(0); // Changed from 1 to 0 to default to Posts
-  const [coverPhoto, setCoverPhoto] = useState(null);
+  const [activeTab, setActiveTab] = useState(0);
   const [profilePic, setProfilePic] = useState(user?.profile_pic || avatarPic);
   const [openEditModal, setOpenEditModal] = useState(false);
-
-  // References to file inputs
-  const profilePicInputRef = useRef(null);
-  const coverPhotoInputRef = useRef(null);
 
   const fetchProfile = async () => {
     const userProfileData = await profileService.getProfile();
@@ -99,16 +92,10 @@ export default function Profile() {
     fetchProfile();
   }, []);
 
-  const handleImageUpload = (file) => {
-    console.log('Profile picture uploaded:', file);
-  };
-
   const handleProfileUpdate = async (updatedData) => {
     try {
-      // Update the profile data in state and close the modal
       setProfileData({ ...profileData, ...updatedData });
 
-      // If user data was updated (like name), update the user context
       if (updatedData.first_name || updatedData.last_name) {
         setUser((prev) => ({
           ...prev,
@@ -128,34 +115,6 @@ export default function Profile() {
 
   const handleTabChange = (e, newValue) => {
     setActiveTab(newValue);
-  };
-
-  const handleProfilePicUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setProfilePic(imageUrl);
-
-      // Call your image upload service/API here
-      handleImageUpload(file);
-
-      // You might want to reset the input
-      event.target.value = '';
-    }
-  };
-
-  const handleCoverPhotoUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setCoverPhoto(imageUrl);
-
-      // Call your image upload service/API here
-      console.log('Cover photo uploaded:', file);
-
-      // You might want to reset the input
-      event.target.value = '';
-    }
   };
 
   const handleEditProfileClick = () => {
@@ -199,22 +158,6 @@ export default function Profile() {
 
   return (
     <Box sx={{ bgcolor: '#f0f2f5', minHeight: '100vh', pt: 2 }}>
-      {/* Hidden file inputs */}
-      <input
-        type="file"
-        accept="image/*"
-        ref={profilePicInputRef}
-        style={{ display: 'none' }}
-        onChange={handleProfilePicUpload}
-      />
-      <input
-        type="file"
-        accept="image/*"
-        ref={coverPhotoInputRef}
-        style={{ display: 'none' }}
-        onChange={handleCoverPhotoUpload}
-      />
-
       <Container maxWidth="md" disableGutters>
         {/* Cover Photo Section */}
         <Paper
@@ -230,9 +173,7 @@ export default function Profile() {
           <Box
             sx={{
               height: 250,
-              background: coverPhoto
-                ? `url(${coverPhoto})`
-                : getRandomCoverGradient(),
+              background: getRandomCoverGradient(),
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               position: 'relative',
@@ -242,7 +183,6 @@ export default function Profile() {
               variant="contained"
               size="small"
               startIcon={<CameraAltIcon />}
-              onClick={() => coverPhotoInputRef.current.click()}
               sx={{
                 position: 'absolute',
                 bottom: 15,
@@ -252,7 +192,7 @@ export default function Profile() {
                 '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' },
               }}
             >
-              {coverPhoto ? 'Change Cover Photo' : 'Add Cover Photo'}
+              Add Cover Photo
             </Button>
           </Box>
 
@@ -283,7 +223,6 @@ export default function Profile() {
               <Button
                 variant="contained"
                 size="small"
-                onClick={() => profilePicInputRef.current.click()}
                 sx={{
                   position: 'absolute',
                   bottom: 5,

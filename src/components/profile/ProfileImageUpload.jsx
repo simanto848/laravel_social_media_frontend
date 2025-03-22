@@ -1,17 +1,60 @@
 import React, { useState } from 'react';
 import { Box, Button, Typography, Avatar, Paper } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import { toast } from 'react-hot-toast';
 import avatarImage from '../../assets/male_4.png';
+import profileImageService from '../../services/profileImageService';
 
-export default function ProfileImageUpload({ onUpload, currentImage }) {
+export default function ProfileImageUpload({ currentImage }) {
+  const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const previewUrl = URL.createObjectURL(file);
-      setPreview(previewUrl);
-      onUpload(file); // Pass the file to the parent
+      setImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleUpload = async (e) => {
+    e.preventDefault();
+
+    if (!image) {
+      toast.error('Please select an image to upload');
+      return;
+    }
+
+    const formData = new FormData();
+
+    if (image instanceof File) {
+      formData.append('image', image);
+    } else {
+      toast.error('Invalid file');
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const response = await profileImageService.uploadProfileImage(formData);
+
+      if (response.status) {
+        toast.success(response.message || 'Image uploaded successfully');
+        setImage(null);
+        setPreview(null);
+      } else {
+        toast.error(response.message || 'Failed to upload image');
+      }
+    } catch (error) {
+      toast.error(error || 'Failed to upload image');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -53,27 +96,40 @@ export default function ProfileImageUpload({ onUpload, currentImage }) {
           width: '100%',
         }}
       >
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          style={{ display: 'none' }}
-          id="profile-image-upload"
-        />
-        <label htmlFor="profile-image-upload">
+        <form onSubmit={handleUpload} encType="multipart/form-data">
+          <input
+            type="file"
+            accept="image/*"
+            name="image"
+            onChange={handleFileChange}
+            style={{ display: 'none' }}
+            id="profile-image-upload"
+          />
+          <label htmlFor="profile-image-upload">
+            <Button
+              variant="contained"
+              component="span"
+              startIcon={<CloudUploadIcon />}
+              sx={{
+                bgcolor: '#1877f2',
+                '&:hover': { bgcolor: '#166fe5' },
+                px: 3,
+              }}
+              disabled={uploading}
+            >
+              Choose Image
+            </Button>
+          </label>
           <Button
-            variant="contained"
-            component="span"
-            startIcon={<CloudUploadIcon />}
-            sx={{
-              bgcolor: '#1877f2',
-              '&:hover': { bgcolor: '#166fe5' },
-              px: 3,
-            }}
+            type="submit"
+            variant="outlined"
+            color="success"
+            sx={{ marginLeft: 2 }}
+            disabled={uploading || !image}
           >
-            Choose Image
+            {uploading ? 'Uploading...' : 'Upload Image'}
           </Button>
-        </label>
+        </form>
         <Typography variant="body2" color="textSecondary" sx={{ mt: 2 }}>
           Recommended size: 400x400 pixels
         </Typography>

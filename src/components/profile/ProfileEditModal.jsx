@@ -62,16 +62,6 @@ export default function ProfileEditModal({
     setFormState((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleProfilePicUpload = async (file) => {
-    try {
-      // This would need to be connected to an API that supports file uploads
-      console.log('Uploading profile picture:', file);
-      toast.success('Profile picture updated!');
-    } catch (error) {
-      toast.error('Failed to update profile picture');
-    }
-  };
-
   const handleNameUpdate = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -200,10 +190,7 @@ export default function ProfileEditModal({
         )}
 
         {activeTab === 1 && (
-          <ProfileImageUpload
-            onUpload={handleProfilePicUpload}
-            currentImage={userData?.profile_pic}
-          />
+          <ProfileImageUpload currentImage={userData?.profile_pic} />
         )}
 
         {activeTab === 2 && (
