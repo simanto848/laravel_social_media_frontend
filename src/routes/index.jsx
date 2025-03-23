@@ -8,6 +8,7 @@ import { AppContext } from '../Context/AppContext';
 import Profile from '../pages/Profile';
 import Posts from '../pages/post/Posts';
 import Account from '../pages/Account';
+import FindFriend from '../pages/FindFriend';
 
 export default function AppRoutes() {
   const { user } = useContext(AppContext);
@@ -23,6 +24,11 @@ export default function AppRoutes() {
       <Route
         path="/profile"
         element={user ? <Profile /> : <Navigate to="/login" replace />}
+      />
+
+      <Route
+        path="/find-friends"
+        element={user ? <FindFriend /> : <Navigate to="/login" replace />}
       />
 
       <Route

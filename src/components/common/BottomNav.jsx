@@ -13,6 +13,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import HomeIcon from '@mui/icons-material/Home';
 import MessageIcon from '@mui/icons-material/Message';
 import NotificationsIcon from '@mui/icons-material/Notifications';
+import PeopleIcon from '@mui/icons-material/People';
 
 // Custom Hook
 import { useSettingsMenu } from '../../hooks/useSettingsMenu';
@@ -32,9 +33,10 @@ export default function BottomNav() {
     const path = location.pathname;
     if (path === '/') setValue(0);
     else if (path === '/messages') setValue(1);
-    else if (path === '/notifications') setValue(2);
-    else if (path === '/profile') setValue(3);
-    else if (path === '/account') setValue(4);
+    else if (path === '/find-friends') setValue(2);
+    else if (path === '/notifications') setValue(3);
+    else if (path === '/profile') setValue(4);
+    else if (path === '/account') setValue(5);
   }, [location]);
 
   const handleNavigation = (newValue, path) => {
@@ -90,14 +92,19 @@ export default function BottomNav() {
             onClick={() => handleNavigation(1, '/messages')}
           />
           <BottomNavigationAction
+            label="Find Friends"
+            icon={<PeopleIcon />}
+            onClick={() => handleNavigation(2, '/find-friends')}
+          />
+          <BottomNavigationAction
             label="Notifications"
             icon={<NotificationsIcon />}
-            onClick={() => handleNavigation(2, '/notifications')}
+            onClick={() => handleNavigation(3, '/notifications')}
           />
           <BottomNavigationAction
             label={user?.username || 'Profile'}
             icon={<AccountCircleIcon />}
-            onClick={() => handleNavigation(3, '/profile')}
+            onClick={() => handleNavigation(4, '/profile')}
           />
           <BottomNavigationAction
             label="More"
@@ -118,7 +125,7 @@ export default function BottomNav() {
         <MenuItem
           onClick={() => {
             closeMenu();
-            handleNavigation(4, '/account');
+            handleNavigation(5, '/account');
           }}
         >
           Account Settings
