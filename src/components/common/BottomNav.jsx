@@ -14,6 +14,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import MessageIcon from '@mui/icons-material/Message';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import PeopleIcon from '@mui/icons-material/People';
+import Badge from '@mui/material/Badge';
 
 // Custom Hook
 import { useSettingsMenu } from '../../hooks/useSettingsMenu';
@@ -98,8 +99,11 @@ export default function BottomNav() {
           />
           <BottomNavigationAction
             label="Notifications"
-            icon={<NotificationsIcon />}
-            onClick={() => handleNavigation(3, '/notifications')}
+            icon={
+              <Badge badgeContent={1} color="error">
+                <NotificationsIcon />
+              </Badge>
+            }
           />
           <BottomNavigationAction
             label={user?.username || 'Profile'}
