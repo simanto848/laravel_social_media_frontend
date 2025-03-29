@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { toast } from 'react-hot-toast';
 import {
   Box,
   Button,
@@ -12,8 +13,26 @@ import {
 } from '@mui/material';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import CloseIcon from '@mui/icons-material/Close';
+import friendService from '../../services/friendService';
 
-export default function FriendCard({ userList }) {
+export default function FriendCard({ userList, onFriendRequestSent }) {
+  const [isLoading, setIsLoading] = useState(false);
+  const hadnleAddFriend = async (friendId) => {
+    setIsLoading(true);
+    try {
+      const response = await friendService.sendFriendRequest(friendId);
+      if (response.status) {
+        toast.success(response.message);
+        onFriendRequestSent();
+      } else {
+        toast.error(response.message);
+      }
+    } catch (error) {
+      toast.error(error.message || 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <Box
       sx={{
@@ -98,8 +117,10 @@ export default function FriendCard({ userList }) {
           >
             <Button
               variant="contained"
+              disabled={isLoading}
               startIcon={<PersonAddIcon />}
               fullWidth
+              onClick={() => hadnleAddFriend(user.user_id)}
               sx={{
                 bgcolor: '#1877f2',
                 '&:hover': { bgcolor: '#166fe5' },
@@ -109,7 +130,7 @@ export default function FriendCard({ userList }) {
                 py: 1,
               }}
             >
-              Add Friend
+              {isLoading ? 'Sending...' : 'Add Friend'}
             </Button>
           </CardActions>
         </Card>

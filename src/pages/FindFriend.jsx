@@ -22,6 +22,10 @@ export default function FindFriend() {
     }
   };
 
+  const onFriendRequestSent = () => {
+    fetchSuggestFriends();
+  };
+
   useEffect(() => {
     fetchSuggestFriends();
   }, [user.id]);
@@ -37,8 +41,10 @@ export default function FindFriend() {
       <Box
         sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
       >
-        {' '}
-        <FriendCard userList={SuggestFriends} />
+        <FriendCard
+          userList={SuggestFriends}
+          onFriendRequestSent={onFriendRequestSent}
+        />
       </Box>
     </Container>
   );
