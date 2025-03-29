@@ -25,7 +25,7 @@ export default function FriendCard({ userList }) {
     >
       {userList.map((user) => (
         <Card
-          key={user.username || user.name}
+          key={user.id}
           sx={{
             width: 250,
             borderRadius: 2,
@@ -57,8 +57,12 @@ export default function FriendCard({ userList }) {
               }}
             >
               <Avatar
-                src={user.profilePic}
-                alt={user.name}
+                src={
+                  user.image?.path
+                    ? `http://localhost:8000/storage/${user.image.path}`
+                    : ''
+                }
+                alt={user.first_name + ' ' + user.last_name}
                 sx={{
                   width: 100,
                   height: 100,
@@ -72,8 +76,10 @@ export default function FriendCard({ userList }) {
                 align="center"
                 sx={{ fontWeight: 'bold', cursor: 'pointer' }}
               >
-                {user.name}
+                {user.first_name} {user.last_name}
               </Typography>
+
+              {/* Will be working on this part later */}
               <Typography
                 variant="body2"
                 color="text.secondary"

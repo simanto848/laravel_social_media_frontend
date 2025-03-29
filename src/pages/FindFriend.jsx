@@ -1,37 +1,30 @@
-import React from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Box, Container, Typography, Divider } from '@mui/material';
+import { toast } from 'react-hot-toast';
 import FriendCard from '../components/Friend/FriendCard';
+import friendService from '../services/friendService';
+import { AppContext } from '../Context/AppContext';
 
 export default function FindFriend() {
-  const UsersInfo = [
-    {
-      name: 'Jane Doe',
-      username: 'janedoe',
-      profilePic:
-        'http://localhost:8000/storage/profile_images/IrxVrn1ubE5GZycUAbo2Rk4TKtX0NMSaWOHlujUP.jpg',
-      mutualFriends: 3,
-    },
-    {
-      name: 'Alice Smith',
-      username: 'alicesmith',
-      profilePic:
-        'http://localhost:8000/storage/profile_images/IrxVrn1ubE5GZycUAbo2Rk4TKtX0NMSaWOHlujUP.jpg',
-      mutualFriends: 5,
-    },
-    {
-      name: 'Bob Johnson',
-      username: 'bobjohnson',
-      profilePic:
-        'http://localhost:8000/storage/profile_images/IrxVrn1ubE5GZycUAbo2Rk4TKtX0NMSaWOHlujUP.jpg',
-      mutualFriends: 1,
-    },
-    {
-      name: 'Sarah Williams',
-      username: 'sarahw',
-      profilePic:
-        'http://localhost:8000/storage/profile_images/IrxVrn1ubE5GZycUAbo2Rk4TKtX0NMSaWOHlujUP.jpg',
-    },
-  ];
+  const [SuggestFriends, setSuggestFriends] = useState([]);
+  const { user } = useContext(AppContext);
+
+  const fetchSuggestFriends = async () => {
+    try {
+      const response = await friendService.getSuggestedFriends();
+      if (response.status) {
+        setSuggestFriends(response.data);
+      } else {
+        toast.error(response.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchSuggestFriends();
+  }, [user.id]);
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
@@ -45,7 +38,7 @@ export default function FindFriend() {
         sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
       >
         {' '}
-        <FriendCard userList={UsersInfo} />
+        <FriendCard userList={SuggestFriends} />
       </Box>
     </Container>
   );
