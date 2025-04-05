@@ -1,33 +1,16 @@
 import React, { useContext, useEffect, useState } from 'react';
-import {
-  Container,
-  Box,
-  Typography,
-  Tabs,
-  Tab,
-  Paper,
-  Button,
-  Avatar,
-  Divider,
-  Dialog,
-  DialogContent,
-} from '@mui/material';
-import CameraAltIcon from '@mui/icons-material/CameraAlt';
-import EditIcon from '@mui/icons-material/Edit';
+import { Container, Box, Paper } from '@mui/material';
 import { toast } from 'react-hot-toast';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import profileService from '../services/profileServices';
 import { AppContext } from '../Context/AppContext';
-import { getRandomCoverGradient } from '../assets/cover_photo.js';
 import postPic from '../assets/female_avatar_2.png';
-import AboutMe from '../components/profile/AboutMe';
-import PostForm from '../components/post/PostForm';
-import PostCard from '../components/post/PostCard';
-import Photos from '../components/profile/Photos';
-import Friends from '../components/profile/Friends';
-import ProfileEditModal from '../components/profile/ProfileEditModal';
-import ProfileImageUpload from '../components/profile/ProfileImageUpload.jsx';
+import ProfileHeader from '../components/profile/ProfileHeader.jsx';
+import ProfileTabs from '../components/profile/ProfileTabs.jsx';
+import ProfileContent from '../components/profile/ProfileContent.jsx';
+import ProfileModals from '../components/profile/ProfileModals.jsx';
+import friendService from '../services/friendService.jsx';
 
 const staticPosts = [
   {
@@ -80,8 +63,18 @@ export default function Profile() {
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openImageUpload, setOpenImageUpload] = useState(false);
   const [profileImageUpdated, setProfileImageUpdated] = useState(false);
+  const [friendshipStatus, setFriendshipStatus] = useState(null);
+  const [isLoadingFriendship, setIsLoadingFriendship] = useState(false);
+  const [isProcessingFriendAction, setIsProcessingFriendAction] =
+    useState(false);
+  const [currentFriendshipId, setCurrentFriendshipId] = useState(null);
+  const navigate = useNavigate();
 
-  const isOwnProfile = user.username === visitedUsername;
+  const isOwnProfile = user?.username === visitedUsername;
+
+  useEffect(() => {
+    fetchProfile();
+  }, [visitedUsername, profileImageUpdated]);
 
   const fetchProfile = async () => {
     const userProfileData = await profileService.getProfileByUsername(
@@ -89,6 +82,7 @@ export default function Profile() {
     );
     if (userProfileData.status) {
       const userData = userProfileData.data.data;
+
       setProfileData(userData);
       if (
         userData.profile &&
@@ -103,13 +97,137 @@ export default function Profile() {
     }
   };
 
+  // Check friendship status when profile loads
   useEffect(() => {
-    fetchProfile();
-  }, [visitedUsername, profileImageUpdated]);
+    const checkFriendship = async () => {
+      // Don't check for own profile or if user isn't logged in
+      if (isOwnProfile || !user?.id || !profileData?.profile?.user_id) return;
+
+      setIsLoadingFriendship(true);
+      try {
+        const response = await friendService.getFriendship(
+          profileData.profile.user_id
+        );
+        console.log(response);
+
+        if (response?.status) {
+          const friendship = response.data?.data;
+
+          if (!friendship) {
+            setFriendshipStatus('none');
+            return;
+          }
+
+          if (friendship.status === 'accepted') {
+            setFriendshipStatus('friends');
+          } else if (friendship.status === 'pending') {
+            if (friendship.requested_by === user.id) {
+              setFriendshipStatus('pending_sent');
+            } else {
+              setFriendshipStatus('pending_received');
+            }
+          } else {
+            setFriendshipStatus('none');
+          }
+
+          // Store the friendship ID for later use in actions
+          setCurrentFriendshipId(friendship.id);
+        } else {
+          setFriendshipStatus('none');
+        }
+      } catch (error) {
+        console.error('Error checking friendship:', error);
+        setFriendshipStatus('none');
+      } finally {
+        setIsLoadingFriendship(false);
+      }
+    };
+
+    checkFriendship();
+  }, [profileData, user, isOwnProfile]);
+
+  // Handle friend actions
+  const handleSendFriendRequest = async () => {
+    setIsProcessingFriendAction(true);
+    try {
+      const response = await friendService.sendFriendRequest(
+        profileData.user.id
+      );
+      if (response.status) {
+        setFriendshipStatus('pending_sent');
+        toast.success('Friend request sent!');
+      } else {
+        toast.error(response.message || 'Failed to send friend request');
+      }
+    } catch (error) {
+      toast.error('Failed to send friend request');
+      console.error(error);
+    } finally {
+      setIsProcessingFriendAction(false);
+    }
+  };
+
+  const handleAcceptFriendRequest = async (friendshipId) => {
+    setIsProcessingFriendAction(true);
+    try {
+      const response = await friendService.acceptFriendRequest(friendshipId);
+      if (response.status) {
+        setFriendshipStatus('friends');
+        toast.success('Friend request accepted!');
+      } else {
+        toast.error(response.message || 'Failed to accept friend request');
+      }
+    } catch (error) {
+      toast.error('Failed to accept friend request');
+      console.error(error);
+    } finally {
+      setIsProcessingFriendAction(false);
+    }
+  };
+
+  const handleRejectFriendRequest = async (friendshipId) => {
+    setIsProcessingFriendAction(true);
+    try {
+      const response = await friendService.rejectFriendRequest(friendshipId);
+      if (response.status) {
+        setFriendshipStatus('none');
+        toast.success('Friend request rejected');
+      } else {
+        toast.error(response.message || 'Failed to reject friend request');
+      }
+    } catch (error) {
+      toast.error('Failed to reject friend request');
+      console.error(error);
+    } finally {
+      setIsProcessingFriendAction(false);
+    }
+  };
+
+  const handleUnsendFriendRequest = async (friendshipId) => {
+    setIsProcessingFriendAction(true);
+    try {
+      const response = await friendService.rejectFriendRequest(friendshipId);
+      if (response.status) {
+        setFriendshipStatus('none');
+        toast.success('Friend request unsent');
+      } else {
+        toast.error(response.message || 'Failed to unsend friend request');
+      }
+    } catch (error) {
+      toast.error('Failed to unsend friend request');
+      console.error(error);
+    } finally {
+      setIsProcessingFriendAction(false);
+    }
+  };
+
+  const handleMessageClick = () => {
+    // Navigate to messages with this user
+    navigate(`/messages/${profileData.user.id}`);
+  };
 
   const handleProfileUpdate = async (updatedData) => {
     try {
-      // Update nested profile data
       setProfileData((prev) => ({
         ...prev,
         profile: {
@@ -133,7 +251,7 @@ export default function Profile() {
   };
 
   const handleProfileImageChange = () => {
-    setProfileImageUpdated((prev) => !prev); // Toggle to trigger useEffect
+    setProfileImageUpdated((prev) => !prev);
   };
 
   const handleTabChange = (e, newValue) => {
@@ -159,39 +277,11 @@ export default function Profile() {
   };
 
   const tabs = [
-    {
-      label: 'Posts',
-      component: () => (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {isOwnProfile && <PostForm />}
-          {staticPosts.map((post) => (
-            <PostCard key={post.id} post={post} />
-          ))}
-        </Box>
-      ),
-    },
-    {
-      label: 'About',
-      component: () => (
-        <AboutMe
-          profile={profileData.profile || {}}
-          onUpdate={handleProfileUpdate}
-        />
-      ),
-    },
-    {
-      label: 'Photos',
-      component: () => (
-        <Photos profileImageUpdated={handleProfileImageChange} />
-      ),
-    },
-    {
-      label: 'Friends',
-      component: () => <Friends />,
-    },
+    { label: 'Posts' },
+    { label: 'About' },
+    { label: 'Photos' },
+    { label: 'Friends' },
   ];
-
-  const renderTabContent = () => tabs[activeTab].component() || null;
 
   return (
     <Box sx={{ bgcolor: '#f0f2f5', minHeight: '100vh', pt: 2 }}>
@@ -205,171 +295,56 @@ export default function Profile() {
             boxShadow: 1,
           }}
         >
-          <Box
-            sx={{
-              height: 250,
-              background: getRandomCoverGradient(),
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              position: 'relative',
-            }}
-          >
-            {isOwnProfile && (
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<CameraAltIcon />}
-                sx={{
-                  position: 'absolute',
-                  bottom: 15,
-                  right: 15,
-                  bgcolor: 'rgba(255,255,255,0.8)',
-                  color: '#000',
-                  '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' },
-                }}
-              >
-                Add Cover Photo
-              </Button>
-            )}
-          </Box>
+          <ProfileHeader
+            profileData={profileData}
+            isOwnProfile={isOwnProfile}
+            profilePicUrl={profilePicUrl}
+            handleEditProfileClick={handleEditProfileClick}
+            handleOpenImageUpload={handleOpenImageUpload}
+            friendshipStatus={friendshipStatus}
+            handleSendFriendRequest={handleSendFriendRequest}
+            handleAcceptFriendRequest={() =>
+              handleAcceptFriendRequest(currentFriendshipId)
+            }
+            handleRejectFriendRequest={() =>
+              handleRejectFriendRequest(currentFriendshipId)
+            }
+            handleUnsendFriendRequest={() =>
+              handleUnsendFriendRequest(currentFriendshipId)
+            }
+            handleMessageClick={handleMessageClick}
+            isLoadingFriendship={isLoadingFriendship}
+            isProcessingFriendAction={isProcessingFriendAction}
+          />
 
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: { xs: 'column', sm: 'row' },
-              alignItems: { xs: 'center', sm: 'flex-end' },
-              px: 3,
-              pb: 2,
-              position: 'relative',
-              mt: { xs: -8, sm: -5 },
-            }}
-          >
-            <Box sx={{ position: 'relative' }}>
-              <Avatar
-                src={profilePicUrl}
-                alt={profileData.username || 'User'}
-                sx={{
-                  width: { xs: 120, sm: 168 },
-                  height: { xs: 120, sm: 168 },
-                  border: '4px solid white',
-                  boxShadow: 1,
-                }}
-              />
-              {isOwnProfile && (
-                <Button
-                  variant="contained"
-                  size="small"
-                  onClick={handleOpenImageUpload}
-                  sx={{
-                    position: 'absolute',
-                    bottom: 5,
-                    right: 5,
-                    minWidth: 'auto',
-                    borderRadius: '50%',
-                    bgcolor: '#e4e6eb',
-                    color: '#050505',
-                    p: 1,
-                    '&:hover': { bgcolor: '#d8dadf' },
-                  }}
-                >
-                  <CameraAltIcon fontSize="small" />
-                </Button>
-              )}
-            </Box>
-
-            <Box
-              sx={{
-                ml: { xs: 0, sm: 3 },
-                mt: { xs: 2, sm: 0 },
-                mb: { xs: 2, sm: 1 },
-                textAlign: { xs: 'center', sm: 'left' },
-                flexGrow: 1,
-              }}
-            >
-              <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-                {profileData.profile?.first_name || ''}{' '}
-                {profileData.profile?.last_name || ''}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                {profileData.profile?.bio || 'No bio available'}
-              </Typography>
-            </Box>
-
-            {isOwnProfile && (
-              <Button
-                variant="contained"
-                startIcon={<EditIcon />}
-                onClick={handleEditProfileClick}
-                sx={{
-                  alignSelf: { xs: 'center', sm: 'flex-end' },
-                  bgcolor: '#e4e6eb',
-                  color: '#050505',
-                  fontWeight: 'bold',
-                  '&:hover': { bgcolor: '#d8dadf' },
-                }}
-              >
-                Edit Profile
-              </Button>
-            )}
-          </Box>
-
-          <Divider />
-
-          <Tabs
-            value={activeTab}
-            onChange={handleTabChange}
-            aria-label="profile tabs"
-            sx={{
-              px: 2,
-              '& .MuiTab-root': {
-                textTransform: 'none',
-                minWidth: 80,
-                fontWeight: 'bold',
-                mx: 1,
-                fontSize: '0.95rem',
-                color: '#65676b',
-              },
-              '& .Mui-selected': {
-                color: '#1877f2',
-              },
-              '& .MuiTabs-indicator': {
-                backgroundColor: '#1877f2',
-                height: 3,
-              },
-            }}
-          >
-            {tabs.map((tab, index) => (
-              <Tab key={index} label={tab.label} />
-            ))}
-          </Tabs>
+          <ProfileTabs
+            activeTab={activeTab}
+            handleTabChange={handleTabChange}
+            tabs={tabs}
+          />
         </Paper>
 
-        <Paper sx={{ p: 3, borderRadius: '8px', boxShadow: 1, mb: 3 }}>
-          {renderTabContent()}
-        </Paper>
+        <ProfileContent
+          activeTab={activeTab}
+          isOwnProfile={isOwnProfile}
+          profileData={profileData}
+          handleProfileUpdate={handleProfileUpdate}
+          handleProfileImageChange={handleProfileImageChange}
+          staticPosts={staticPosts}
+        />
       </Container>
 
-      {isOwnProfile && (
-        <>
-          <ProfileEditModal
-            open={openEditModal}
-            onClose={handleCloseEditModal}
-            profileData={profileData.profile || {}}
-            userData={user}
-            onUpdate={handleProfileUpdate}
-          />
-          <Dialog
-            open={openImageUpload}
-            onClose={handleCloseImageUpload}
-            maxWidth="sm"
-            fullWidth
-          >
-            <DialogContent>
-              <ProfileImageUpload currentImage={profilePicUrl} />
-            </DialogContent>
-          </Dialog>
-        </>
-      )}
+      <ProfileModals
+        isOwnProfile={isOwnProfile}
+        openEditModal={openEditModal}
+        handleCloseEditModal={handleCloseEditModal}
+        profileData={profileData}
+        user={user}
+        handleProfileUpdate={handleProfileUpdate}
+        openImageUpload={openImageUpload}
+        handleCloseImageUpload={handleCloseImageUpload}
+        profilePicUrl={profilePicUrl}
+      />
     </Box>
   );
 }
