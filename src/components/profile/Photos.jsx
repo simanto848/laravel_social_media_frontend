@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   Typography,
   Box,
@@ -13,27 +13,35 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import PersonIcon from '@mui/icons-material/Person';
 import { toast } from 'react-hot-toast';
+import { useParams } from 'react-router-dom';
 import profileImageService from '../../services/profileImageService';
+import { AppContext } from '../../Context/AppContext';
 
 export default function Photos({ profileImageUpdated }) {
   const [imageItems, setImageItems] = useState([]);
+  const { username: visitedUsername } = useParams();
+  const { user } = useContext(AppContext);
+  const isOwnProfile = user.username === visitedUsername;
 
   useEffect(() => {
     fetchUserImages();
-  }, []);
+  }, [visitedUsername, profileImageUpdated]);
 
   const fetchUserImages = async () => {
     try {
-      const response = await profileImageService.getAllImage();
+      const response = await profileImageService.getAllImage(visitedUsername);
       if (response.status) {
         const formattedImages = response.data.map((image) => ({
-          ...image,
+          id: image.id,
           img: `http://localhost:8000/storage/${image.path}`,
         }));
         setImageItems(formattedImages);
+      } else {
+        toast.error(response.message || 'Failed to fetch photos');
       }
     } catch (error) {
-      toast.error(error.message || 'Something went wrong');
+      toast.error('Something went wrong while fetching photos');
+      console.error('Error fetching images:', error);
     }
   };
 
@@ -41,13 +49,14 @@ export default function Photos({ profileImageUpdated }) {
     try {
       const response = await profileImageService.deleteProfileImage(imageId);
       if (response.status) {
-        toast.success(response.message || 'Image deleted successfully');
+        toast.success(response.data.message || 'Image deleted successfully');
         fetchUserImages();
       } else {
         toast.error(response.message || 'Failed to delete image');
       }
     } catch (error) {
-      toast.error(error.message || 'Something went wrong');
+      toast.error('Something went wrong while deleting the image');
+      console.error('Error deleting image:', error);
     }
   };
 
@@ -56,15 +65,16 @@ export default function Photos({ profileImageUpdated }) {
       const response = await profileImageService.updateProfileImage(imageId);
       if (response.status) {
         toast.success(
-          response.message || 'Profile picture updated successfully'
+          response.data.message || 'Profile picture updated successfully'
         );
-        profileImageUpdated(); // Trigger the reload in Profile
-        fetchUserImages(); // Refresh the photo list
+        profileImageUpdated(); // Notify Profile component to reload
+        fetchUserImages(); // Refresh the list
       } else {
         toast.error(response.message || 'Failed to set profile picture');
       }
     } catch (error) {
-      toast.error(error.message || 'Something went wrong');
+      toast.error('Something went wrong while updating the profile picture');
+      console.error('Error setting profile image:', error);
     }
   };
 
@@ -81,7 +91,7 @@ export default function Photos({ profileImageUpdated }) {
           letterSpacing: 1,
         }}
       >
-        Your Photos
+        {isOwnProfile ? 'Your Photos' : `${visitedUsername}'s Photos`}
       </Typography>
 
       {imageItems.length > 0 ? (
@@ -95,7 +105,7 @@ export default function Photos({ profileImageUpdated }) {
         >
           {imageItems.map((item) => (
             <ImageListItem
-              key={item.id || item.img}
+              key={item.id}
               sx={{
                 transition: 'transform 0.3s ease, box-shadow 0.3s ease',
                 '&:hover': {
@@ -124,35 +134,37 @@ export default function Photos({ profileImageUpdated }) {
                     '&:hover': { filter: 'brightness(100%)' },
                   }}
                 />
-                <CardActions
-                  sx={{
-                    position: 'absolute',
-                    bottom: 0,
-                    right: 0,
-                    bgcolor: 'rgba(0, 0, 0, 0.6)',
-                    borderRadius: '0 0 8px 0',
-                    p: 1,
-                  }}
-                >
-                  <Tooltip title="Set as Profile Picture">
-                    <IconButton
-                      size="small"
-                      onClick={() => handleSetProfileImage(item.id)}
-                      sx={{ color: '#fff', '&:hover': { color: '#1877f2' } }}
-                    >
-                      <PersonIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Delete Image">
-                    <IconButton
-                      size="small"
-                      onClick={() => handleDeleteImage(item.id)}
-                      sx={{ color: '#fff', '&:hover': { color: '#f44336' } }}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Tooltip>
-                </CardActions>
+                {isOwnProfile && (
+                  <CardActions
+                    sx={{
+                      position: 'absolute',
+                      bottom: 0,
+                      right: 0,
+                      bgcolor: 'rgba(0, 0, 0, 0.6)',
+                      borderRadius: '0 0 8px 0',
+                      p: 1,
+                    }}
+                  >
+                    <Tooltip title="Set as Profile Picture">
+                      <IconButton
+                        size="small"
+                        onClick={() => handleSetProfileImage(item.id)}
+                        sx={{ color: '#fff', '&:hover': { color: '#1877f2' } }}
+                      >
+                        <PersonIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete Image">
+                      <IconButton
+                        size="small"
+                        onClick={() => handleDeleteImage(item.id)}
+                        sx={{ color: '#fff', '&:hover': { color: '#f44336' } }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </CardActions>
+                )}
               </Card>
             </ImageListItem>
           ))}
@@ -173,7 +185,9 @@ export default function Photos({ profileImageUpdated }) {
             variant="body1"
             sx={{ color: '#65676b', fontStyle: 'italic' }}
           >
-            No photos available yet. Upload some memories!
+            {isOwnProfile
+              ? 'No photos available yet. Upload some memories!'
+              : 'No photos available.'}
           </Typography>
         </Box>
       )}

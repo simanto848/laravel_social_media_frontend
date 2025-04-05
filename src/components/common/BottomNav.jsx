@@ -37,6 +37,8 @@ export default function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const profilePath = user?.username ? `/profile/${user.username}` : '/profile';
+
   const navItems = useMemo(
     () => [
       { label: 'Home', icon: <HomeIcon />, path: '/' },
@@ -53,21 +55,23 @@ export default function BottomNav() {
       {
         label: user?.username || 'Profile',
         icon: <AccountCircleIcon />,
-        path: '/profile',
+        path: profilePath,
       },
       { label: 'More', icon: <SettingsIcon /> },
     ],
-    [user, unreadCount]
+    [user?.username, unreadCount]
   );
 
   // Sync active tab with current location
   useEffect(() => {
     const currentPath = location.pathname;
-    const activeIndex = navItems.findIndex((item) => item.path === currentPath);
+    const activeIndex = navItems.findIndex((item) =>
+      item.path ? currentPath === item.path : false
+    );
     setActiveTab(activeIndex !== -1 ? activeIndex : 0);
-  }, [location, navItems]);
+  }, [location.pathname, navItems]);
 
-  // Fetch initial notifications
+  // Fetch notifications
   useEffect(() => {
     const fetchNotifications = async () => {
       if (!token) return;
@@ -100,6 +104,9 @@ export default function BottomNav() {
     };
 
     fetchNotifications();
+    // Optional: Add polling for real-time updates
+    const interval = setInterval(fetchNotifications, 60000); // Refresh every 60 seconds
+    return () => clearInterval(interval);
   }, [token]);
 
   // Handle navigation
@@ -134,8 +141,8 @@ export default function BottomNav() {
           toast.error(response.message);
         }
       } catch (error) {
-        console.log(error);
         toast.error('Failed to mark notifications as read');
+        console.error(error);
       }
     }
   };
@@ -146,20 +153,18 @@ export default function BottomNav() {
       const response = await notificationService.deleteNotification(
         notificationId
       );
-      console.log('Delete Notification Response:', response);
-
       if (response.status) {
         setNotifications((prev) =>
           prev.filter((notif) => notif.id !== notificationId)
         );
         setUnreadCount((prev) => Math.max(prev - 1, 0));
-        toast.success(response.data.message);
+        toast.success(response.data.message || 'Notification deleted');
       } else {
         toast.error(response.message);
       }
     } catch (error) {
-      console.log(error);
       toast.error('Failed to delete notification');
+      console.error(error);
     }
   };
 
@@ -194,6 +199,11 @@ export default function BottomNav() {
           showLabels
           value={activeTab}
           onChange={(_, newValue) => setActiveTab(newValue)}
+          sx={{
+            '& .Mui-selected': {
+              color: location.pathname === profilePath ? '#1877f2' : '#65676b', // Highlight Profile tab when on own profile
+            },
+          }}
         >
           {navItems.map((item, index) => (
             <BottomNavigationAction
@@ -207,6 +217,14 @@ export default function BottomNav() {
                   ? openMenu(e) // More
                   : handleNavClick(index, item.path)
               }
+              sx={{
+                '&.Mui-selected': {
+                  color:
+                    index === 4 && location.pathname === profilePath
+                      ? '#1877f2'
+                      : undefined,
+                },
+              }}
             />
           ))}
         </BottomNavigation>

@@ -15,6 +15,7 @@ import {
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import EditIcon from '@mui/icons-material/Edit';
 import { toast } from 'react-hot-toast';
+import { useParams } from 'react-router-dom';
 
 import profileService from '../services/profileServices';
 import { AppContext } from '../Context/AppContext';
@@ -71,21 +72,30 @@ const staticPosts = [
 ];
 
 export default function Profile() {
+  const { username: visitedUsername } = useParams();
   const [profileData, setProfileData] = useState({});
   const { user, setUser } = useContext(AppContext);
   const [activeTab, setActiveTab] = useState(0);
   const [profilePicUrl, setProfilePicUrl] = useState(null);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openImageUpload, setOpenImageUpload] = useState(false);
-  const [profileImageUpdated, setProfileImageUpdated] = useState(false); // New boolean flag
+  const [profileImageUpdated, setProfileImageUpdated] = useState(false);
+
+  const isOwnProfile = user.username === visitedUsername;
 
   const fetchProfile = async () => {
-    const userProfileData = await profileService.getProfile();
+    const userProfileData = await profileService.getProfileByUsername(
+      visitedUsername
+    );
     if (userProfileData.status) {
-      const profile = userProfileData.data.data;
-      setProfileData(profile);
-      if (profile.image && profile.image.path) {
-        const imageUrl = `http://localhost:8000/storage/${profile.image.path}`;
+      const userData = userProfileData.data.data;
+      setProfileData(userData);
+      if (
+        userData.profile &&
+        userData.profile.image &&
+        userData.profile.image.path
+      ) {
+        const imageUrl = `http://localhost:8000/storage/${userData.profile.image.path}`;
         setProfilePicUrl(imageUrl);
       }
     } else {
@@ -95,11 +105,18 @@ export default function Profile() {
 
   useEffect(() => {
     fetchProfile();
-  }, [profileImageUpdated]); // Add profileImageUpdated as a dependency
+  }, [visitedUsername, profileImageUpdated]);
 
   const handleProfileUpdate = async (updatedData) => {
     try {
-      setProfileData({ ...profileData, ...updatedData });
+      // Update nested profile data
+      setProfileData((prev) => ({
+        ...prev,
+        profile: {
+          ...prev.profile,
+          ...updatedData,
+        },
+      }));
       if (updatedData.first_name || updatedData.last_name) {
         setUser((prev) => ({
           ...prev,
@@ -116,7 +133,7 @@ export default function Profile() {
   };
 
   const handleProfileImageChange = () => {
-    setProfileImageUpdated((prev) => !prev); // Toggle the boolean to trigger useEffect
+    setProfileImageUpdated((prev) => !prev); // Toggle to trigger useEffect
   };
 
   const handleTabChange = (e, newValue) => {
@@ -146,7 +163,7 @@ export default function Profile() {
       label: 'Posts',
       component: () => (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          <PostForm />
+          {isOwnProfile && <PostForm />}
           {staticPosts.map((post) => (
             <PostCard key={post.id} post={post} />
           ))}
@@ -156,7 +173,10 @@ export default function Profile() {
     {
       label: 'About',
       component: () => (
-        <AboutMe profile={profileData} onUpdate={handleProfileUpdate} />
+        <AboutMe
+          profile={profileData.profile || {}}
+          onUpdate={handleProfileUpdate}
+        />
       ),
     },
     {
@@ -194,21 +214,23 @@ export default function Profile() {
               position: 'relative',
             }}
           >
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={<CameraAltIcon />}
-              sx={{
-                position: 'absolute',
-                bottom: 15,
-                right: 15,
-                bgcolor: 'rgba(255,255,255,0.8)',
-                color: '#000',
-                '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' },
-              }}
-            >
-              Add Cover Photo
-            </Button>
+            {isOwnProfile && (
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<CameraAltIcon />}
+                sx={{
+                  position: 'absolute',
+                  bottom: 15,
+                  right: 15,
+                  bgcolor: 'rgba(255,255,255,0.8)',
+                  color: '#000',
+                  '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' },
+                }}
+              >
+                Add Cover Photo
+              </Button>
+            )}
           </Box>
 
           <Box
@@ -225,7 +247,7 @@ export default function Profile() {
             <Box sx={{ position: 'relative' }}>
               <Avatar
                 src={profilePicUrl}
-                alt={`${profileData.first_name} ${profileData.last_name}`}
+                alt={profileData.username || 'User'}
                 sx={{
                   width: { xs: 120, sm: 168 },
                   height: { xs: 120, sm: 168 },
@@ -233,24 +255,26 @@ export default function Profile() {
                   boxShadow: 1,
                 }}
               />
-              <Button
-                variant="contained"
-                size="small"
-                onClick={handleOpenImageUpload}
-                sx={{
-                  position: 'absolute',
-                  bottom: 5,
-                  right: 5,
-                  minWidth: 'auto',
-                  borderRadius: '50%',
-                  bgcolor: '#e4e6eb',
-                  color: '#050505',
-                  p: 1,
-                  '&:hover': { bgcolor: '#d8dadf' },
-                }}
-              >
-                <CameraAltIcon fontSize="small" />
-              </Button>
+              {isOwnProfile && (
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={handleOpenImageUpload}
+                  sx={{
+                    position: 'absolute',
+                    bottom: 5,
+                    right: 5,
+                    minWidth: 'auto',
+                    borderRadius: '50%',
+                    bgcolor: '#e4e6eb',
+                    color: '#050505',
+                    p: 1,
+                    '&:hover': { bgcolor: '#d8dadf' },
+                  }}
+                >
+                  <CameraAltIcon fontSize="small" />
+                </Button>
+              )}
             </Box>
 
             <Box
@@ -263,27 +287,30 @@ export default function Profile() {
               }}
             >
               <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-                {profileData.first_name} {profileData.last_name}
+                {profileData.profile?.first_name || ''}{' '}
+                {profileData.profile?.last_name || ''}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                {profileData.bio || 'No bio available'}
+                {profileData.profile?.bio || 'No bio available'}
               </Typography>
             </Box>
 
-            <Button
-              variant="contained"
-              startIcon={<EditIcon />}
-              onClick={handleEditProfileClick}
-              sx={{
-                alignSelf: { xs: 'center', sm: 'flex-end' },
-                bgcolor: '#e4e6eb',
-                color: '#050505',
-                fontWeight: 'bold',
-                '&:hover': { bgcolor: '#d8dadf' },
-              }}
-            >
-              Edit Profile
-            </Button>
+            {isOwnProfile && (
+              <Button
+                variant="contained"
+                startIcon={<EditIcon />}
+                onClick={handleEditProfileClick}
+                sx={{
+                  alignSelf: { xs: 'center', sm: 'flex-end' },
+                  bgcolor: '#e4e6eb',
+                  color: '#050505',
+                  fontWeight: 'bold',
+                  '&:hover': { bgcolor: '#d8dadf' },
+                }}
+              >
+                Edit Profile
+              </Button>
+            )}
           </Box>
 
           <Divider />
@@ -322,23 +349,27 @@ export default function Profile() {
         </Paper>
       </Container>
 
-      <ProfileEditModal
-        open={openEditModal}
-        onClose={handleCloseEditModal}
-        profileData={profileData}
-        userData={user}
-        onUpdate={handleProfileUpdate}
-      />
-      <Dialog
-        open={openImageUpload}
-        onClose={handleCloseImageUpload}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogContent>
-          <ProfileImageUpload currentImage={profilePicUrl} />
-        </DialogContent>
-      </Dialog>
+      {isOwnProfile && (
+        <>
+          <ProfileEditModal
+            open={openEditModal}
+            onClose={handleCloseEditModal}
+            profileData={profileData.profile || {}}
+            userData={user}
+            onUpdate={handleProfileUpdate}
+          />
+          <Dialog
+            open={openImageUpload}
+            onClose={handleCloseImageUpload}
+            maxWidth="sm"
+            fullWidth
+          >
+            <DialogContent>
+              <ProfileImageUpload currentImage={profilePicUrl} />
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
     </Box>
   );
 }

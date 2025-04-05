@@ -6,7 +6,6 @@ import Home from '../pages/Home';
 import { useContext } from 'react';
 import { AppContext } from '../Context/AppContext';
 import Profile from '../pages/Profile';
-import Posts from '../pages/post/Posts';
 import Account from '../pages/Account';
 import FindFriend from '../pages/FindFriend';
 
@@ -22,7 +21,7 @@ export default function AppRoutes() {
       />
 
       <Route
-        path="/profile"
+        path="/profile/:username"
         element={user ? <Profile /> : <Navigate to="/login" replace />}
       />
 

@@ -1,11 +1,19 @@
 const profileService = {
-  async getProfile() {
+  async getProfile(userId) {
     try {
-      const response = await fetch('/api/profile', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      const response = await fetch(`/api/profile/${userId}`);
+      const data = await response.json();
+      return response.ok
+        ? { status: true, data }
+        : { status: false, message: data.message };
+    } catch (error) {
+      return { status: false, message: 'Network error', error: error.message };
+    }
+  },
+
+  async getProfileByUsername(username) {
+    try {
+      const response = await fetch(`/api/profile/username/${username}`);
       const data = await response.json();
       return response.ok
         ? { status: true, data }

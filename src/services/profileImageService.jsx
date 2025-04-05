@@ -1,7 +1,10 @@
 const profileImageService = {
-  async getAllImage() {
+  async getAllImage(username) {
     try {
-      const response = await fetch('/api/profile-image/all', {
+      const url = username
+        ? `/api/profile-image/all?username=${encodeURIComponent(username)}`
+        : '/api/profile-image/all';
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
