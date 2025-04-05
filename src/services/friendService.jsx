@@ -87,6 +87,22 @@ const friendService = {
       return { status: false, message: 'Network error', error: error.message };
     }
   },
+
+  async getFriendList() {
+    try {
+      const response = await fetch('/api/friends/list', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      const data = await response.json();
+      return response.ok
+        ? { status: true, data }
+        : { status: false, message: data.message };
+    } catch (error) {
+      return { status: false, message: 'Network error', error: error.message };
+    }
+  },
 };
 
 export default friendService;
