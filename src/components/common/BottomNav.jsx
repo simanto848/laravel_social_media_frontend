@@ -244,7 +244,19 @@ export default function BottomNav() {
         {notifications.length > 0 ? (
           notifications.map((notif) => (
             <MenuItem key={notif.id || notif.timestamp} dense>
-              <Link to={`/profile/${notif.sender_username}`}>
+              {notif.type === 'friend_request' ? (
+                <Link to={`/profile/${notif.sender_username}`}>
+                  <ListItemText
+                    primary={notif.message}
+                    secondary={
+                      <Typography variant="caption" color="textSecondary">
+                        {new Date(notif.timestamp).toLocaleString()}
+                      </Typography>
+                    }
+                    sx={{ flexGrow: 1 }}
+                  />
+                </Link>
+              ) : (
                 <ListItemText
                   primary={notif.message}
                   secondary={
@@ -254,7 +266,7 @@ export default function BottomNav() {
                   }
                   sx={{ flexGrow: 1 }}
                 />
-              </Link>
+              )}
               {notif.id && (
                 <IconButton
                   edge="end"
