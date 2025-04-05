@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect, useMemo } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import Paper from '@mui/material/Paper';
 import BottomNavigation from '@mui/material/BottomNavigation';
 import BottomNavigationAction from '@mui/material/BottomNavigationAction';
@@ -82,20 +82,20 @@ export default function BottomNav() {
         if (unreadResponse.status) {
           setUnreadCount(unreadResponse.data.data.unreadCount || 0);
         } else {
-          console.error(
-            'Failed to fetch unread count:',
-            unreadResponse.message
+          toast.error(
+            unreadResponse.data.message ||
+              'Failed to fetch unread notifications'
           );
         }
 
-        const recentResponse =
-          await notificationService.getRecentNotifications();
-        if (recentResponse.status) {
-          setNotifications(recentResponse.data.data || []);
+        const allNotification = await notificationService.getNotifications();
+
+        const allNotificationData = allNotification.data.data || [];
+        if (allNotification.status) {
+          setNotifications(allNotificationData);
         } else {
-          console.error(
-            'Failed to fetch notifications:',
-            recentResponse.message
+          toast.error(
+            allNotification.data.message || 'Failed to fetch notifications'
           );
         }
       } catch (error) {
@@ -104,8 +104,8 @@ export default function BottomNav() {
     };
 
     fetchNotifications();
-    // Optional: Add polling for real-time updates
-    const interval = setInterval(fetchNotifications, 60000); // Refresh every 60 seconds
+
+    const interval = setInterval(fetchNotifications, 60000);
     return () => clearInterval(interval);
   }, [token]);
 
@@ -120,7 +120,7 @@ export default function BottomNav() {
   // Handle notification dropdown open
   const handleNotifOpen = (event) => {
     setNotifAnchorEl(event.currentTarget);
-    setActiveTab(3); // Highlight Notifications tab
+    setActiveTab(3);
   };
 
   // Handle notification dropdown close and mark as read
@@ -214,7 +214,7 @@ export default function BottomNav() {
                 index === 3
                   ? handleNotifOpen(e) // Notifications
                   : index === 5
-                  ? openMenu(e) // More
+                  ? openMenu(e)
                   : handleNavClick(index, item.path)
               }
               sx={{
@@ -244,15 +244,17 @@ export default function BottomNav() {
         {notifications.length > 0 ? (
           notifications.map((notif) => (
             <MenuItem key={notif.id || notif.timestamp} dense>
-              <ListItemText
-                primary={notif.message}
-                secondary={
-                  <Typography variant="caption" color="textSecondary">
-                    {new Date(notif.timestamp).toLocaleString()}
-                  </Typography>
-                }
-                sx={{ flexGrow: 1 }}
-              />
+              <Link to={`/profile/${notif.sender_username}`}>
+                <ListItemText
+                  primary={notif.message}
+                  secondary={
+                    <Typography variant="caption" color="textSecondary">
+                      {new Date(notif.timestamp).toLocaleString()}
+                    </Typography>
+                  }
+                  sx={{ flexGrow: 1 }}
+                />
+              </Link>
               {notif.id && (
                 <IconButton
                   edge="end"

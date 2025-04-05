@@ -21,9 +21,9 @@ const notificationService = {
     }
   },
 
-  getRecentNotifications: async () => {
+  getNotifications: async () => {
     try {
-      const response = await fetch('/api/notifications/recent', {
+      const response = await fetch('/api/notifications/', {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
