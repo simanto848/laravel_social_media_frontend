@@ -1,10 +1,14 @@
-import React, { useContext, useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import React, { useContext, useState, useEffect, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Paper from '@mui/material/Paper';
 import BottomNavigation from '@mui/material/BottomNavigation';
 import BottomNavigationAction from '@mui/material/BottomNavigationAction';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
+import ListItemText from '@mui/material/ListItemText';
+import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
+import Badge from '@mui/material/Badge';
 import { toast } from 'react-hot-toast';
 
 // Icons
@@ -14,37 +18,152 @@ import HomeIcon from '@mui/icons-material/Home';
 import MessageIcon from '@mui/icons-material/Message';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import PeopleIcon from '@mui/icons-material/People';
-import Badge from '@mui/material/Badge';
+import DeleteIcon from '@mui/icons-material/Delete';
 
-// Custom Hook
+// Custom Hooks and Services
 import { useSettingsMenu } from '../../hooks/useSettingsMenu';
 import authService from '../../services/authService';
+import notificationService from '../../services/notificationService';
 import { AppContext } from '../../Context/AppContext';
 
 export default function BottomNav() {
-  const [value, setValue] = useState(0);
+  const [activeTab, setActiveTab] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState([]);
+  const [notifAnchorEl, setNotifAnchorEl] = useState(null);
   const { anchorEl, openMenu, closeMenu } = useSettingsMenu();
   const { user, logout, token } = useContext(AppContext);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Update the active tab based on current location
-  useEffect(() => {
-    const path = location.pathname;
-    if (path === '/') setValue(0);
-    else if (path === '/messages') setValue(1);
-    else if (path === '/find-friends') setValue(2);
-    else if (path === '/notifications') setValue(3);
-    else if (path === '/profile') setValue(4);
-    else if (path === '/account') setValue(5);
-  }, [location]);
+  const navItems = useMemo(
+    () => [
+      { label: 'Home', icon: <HomeIcon />, path: '/' },
+      { label: 'Messages', icon: <MessageIcon />, path: '/messages' },
+      { label: 'Find Friends', icon: <PeopleIcon />, path: '/find-friends' },
+      {
+        label: 'Notifications',
+        icon: (
+          <Badge badgeContent={unreadCount} color="error">
+            <NotificationsIcon />
+          </Badge>
+        ),
+      },
+      {
+        label: user?.username || 'Profile',
+        icon: <AccountCircleIcon />,
+        path: '/profile',
+      },
+      { label: 'More', icon: <SettingsIcon /> },
+    ],
+    [user, unreadCount]
+  );
 
-  const handleNavigation = (newValue, path) => {
-    setValue(newValue);
-    navigate(path);
+  // Sync active tab with current location
+  useEffect(() => {
+    const currentPath = location.pathname;
+    const activeIndex = navItems.findIndex((item) => item.path === currentPath);
+    setActiveTab(activeIndex !== -1 ? activeIndex : 0);
+  }, [location, navItems]);
+
+  // Fetch initial notifications
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (!token) return;
+
+      try {
+        const unreadResponse =
+          await notificationService.getUnreadNotifications();
+        if (unreadResponse.status) {
+          setUnreadCount(unreadResponse.data.data.unreadCount || 0);
+        } else {
+          console.error(
+            'Failed to fetch unread count:',
+            unreadResponse.message
+          );
+        }
+
+        const recentResponse =
+          await notificationService.getRecentNotifications();
+        if (recentResponse.status) {
+          setNotifications(recentResponse.data.data || []);
+        } else {
+          console.error(
+            'Failed to fetch notifications:',
+            recentResponse.message
+          );
+        }
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+      }
+    };
+
+    fetchNotifications();
+  }, [token]);
+
+  // Handle navigation
+  const handleNavClick = (index, path) => {
+    setActiveTab(index);
+    if (path) {
+      navigate(path);
+    }
   };
 
+  // Handle notification dropdown open
+  const handleNotifOpen = (event) => {
+    setNotifAnchorEl(event.currentTarget);
+    setActiveTab(3); // Highlight Notifications tab
+  };
+
+  // Handle notification dropdown close and mark as read
+  const handleNotifClose = async () => {
+    setNotifAnchorEl(null);
+    if (unreadCount > 0) {
+      try {
+        const response = await notificationService.markNotificationAsRead();
+        if (response.status) {
+          setUnreadCount(0);
+          setNotifications((prev) =>
+            prev.map((notif) => ({
+              ...notif,
+              read_at: new Date().toISOString(),
+            }))
+          );
+        } else {
+          toast.error(response.message);
+        }
+      } catch (error) {
+        console.log(error);
+        toast.error('Failed to mark notifications as read');
+      }
+    }
+  };
+
+  // Handle notification deletion
+  const handleDeleteNotif = async (notificationId) => {
+    try {
+      const response = await notificationService.deleteNotification(
+        notificationId
+      );
+      console.log('Delete Notification Response:', response);
+
+      if (response.status) {
+        setNotifications((prev) =>
+          prev.filter((notif) => notif.id !== notificationId)
+        );
+        setUnreadCount((prev) => Math.max(prev - 1, 0));
+        toast.success(response.data.message);
+      } else {
+        toast.error(response.message);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error('Failed to delete notification');
+    }
+  };
+
+  // Handle logout
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
@@ -68,57 +187,73 @@ export default function BottomNav() {
   return (
     <>
       <Paper
-        sx={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          zIndex: 1000, // Add high z-index
-        }}
+        sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000 }}
         elevation={3}
       >
         <BottomNavigation
           showLabels
-          value={value}
-          onChange={(event, newValue) => setValue(newValue)}
+          value={activeTab}
+          onChange={(_, newValue) => setActiveTab(newValue)}
         >
-          <BottomNavigationAction
-            label="Home"
-            icon={<HomeIcon />}
-            onClick={() => handleNavigation(0, '/')}
-          />
-          <BottomNavigationAction
-            label="Messages"
-            icon={<MessageIcon />}
-            onClick={() => handleNavigation(1, '/messages')}
-          />
-          <BottomNavigationAction
-            label="Find Friends"
-            icon={<PeopleIcon />}
-            onClick={() => handleNavigation(2, '/find-friends')}
-          />
-          <BottomNavigationAction
-            label="Notifications"
-            icon={
-              <Badge badgeContent={1} color="error">
-                <NotificationsIcon />
-              </Badge>
-            }
-          />
-          <BottomNavigationAction
-            label={user?.username || 'Profile'}
-            icon={<AccountCircleIcon />}
-            onClick={() => handleNavigation(4, '/profile')}
-          />
-          <BottomNavigationAction
-            label="More"
-            icon={<SettingsIcon />}
-            onClick={openMenu}
-          />
+          {navItems.map((item, index) => (
+            <BottomNavigationAction
+              key={item.label}
+              label={item.label}
+              icon={item.icon}
+              onClick={(e) =>
+                index === 3
+                  ? handleNotifOpen(e) // Notifications
+                  : index === 5
+                  ? openMenu(e) // More
+                  : handleNavClick(index, item.path)
+              }
+            />
+          ))}
         </BottomNavigation>
       </Paper>
 
-      {/* Settings Dropdown Menu */}
+      {/* Notifications Dropdown */}
+      <Menu
+        anchorEl={notifAnchorEl}
+        open={Boolean(notifAnchorEl)}
+        onClose={handleNotifClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        transformOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        PaperProps={{
+          style: { maxHeight: 300, width: 350, overflowY: 'auto' },
+        }}
+      >
+        {notifications.length > 0 ? (
+          notifications.map((notif) => (
+            <MenuItem key={notif.id || notif.timestamp} dense>
+              <ListItemText
+                primary={notif.message}
+                secondary={
+                  <Typography variant="caption" color="textSecondary">
+                    {new Date(notif.timestamp).toLocaleString()}
+                  </Typography>
+                }
+                sx={{ flexGrow: 1 }}
+              />
+              {notif.id && (
+                <IconButton
+                  edge="end"
+                  size="small"
+                  onClick={() => handleDeleteNotif(notif.id)}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              )}
+            </MenuItem>
+          ))
+        ) : (
+          <MenuItem disabled>
+            <ListItemText primary="No new notifications" />
+          </MenuItem>
+        )}
+      </Menu>
+
+      {/* Settings Dropdown */}
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
@@ -126,12 +261,7 @@ export default function BottomNav() {
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
         transformOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <MenuItem
-          onClick={() => {
-            closeMenu();
-            handleNavigation(5, '/account');
-          }}
-        >
+        <MenuItem onClick={() => handleNavClick(4, '/account', closeMenu)}>
           Account Settings
         </MenuItem>
         <MenuItem onClick={handleLogout} disabled={isLoggingOut}>
