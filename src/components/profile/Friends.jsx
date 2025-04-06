@@ -49,7 +49,7 @@ export default function Friends() {
 
   const handleMenuOpen = (event, friendId) => {
     setAnchorEl(event.currentTarget);
-    setSelectedFriendId(friendId);
+    setSelectedFriendId(friendId); // friendId is the user_id of the friend
   };
 
   const handleMenuClose = () => {
@@ -58,12 +58,15 @@ export default function Friends() {
   };
 
   const handleUnfriend = async () => {
+    if (!selectedFriendId) return;
+
     try {
-      // Assuming friendService has an unfriend method
-      const response = await friendService.unfriend(selectedFriendId);
+      const response = await friendService.unFriend(selectedFriendId);
       if (response.status) {
-        setFriends(friends.filter((friend) => friend.id !== selectedFriendId));
-        toast.success('Friend removed successfully');
+        setFriends(
+          friends.filter((friend) => friend.user_id !== selectedFriendId)
+        );
+        toast.success(response.message || 'Unfriended successfully');
       } else {
         toast.error(response.message || 'Failed to unfriend');
       }
@@ -75,20 +78,8 @@ export default function Friends() {
   };
 
   const handleBlock = async () => {
-    try {
-      // Assuming friendService has a block method
-      const response = await friendService.block(selectedFriendId);
-      if (response.status) {
-        setFriends(friends.filter((friend) => friend.id !== selectedFriendId));
-        toast.success('Friend blocked successfully');
-      } else {
-        toast.error(response.message || 'Failed to block');
-      }
-    } catch (error) {
-      toast.error(`Error blocking: ${error.message}`);
-    } finally {
-      handleMenuClose();
-    }
+    toast.error('Block feature not implemented yet');
+    handleMenuClose();
   };
 
   return (
@@ -122,8 +113,9 @@ export default function Friends() {
             {friends.length > 0 ? (
               friends.map((friend) => (
                 <Grid item xs={12} sm={6} md={4} key={friend.id}>
+                  {/* Not implement yet of Link to the friend profile */}
                   <Link
-                    to={`/profile/${friend.id}`}
+                    to={`/profile/${friend.user_id}`}
                     style={{ textDecoration: 'none' }}
                   >
                     <Card
@@ -185,8 +177,8 @@ export default function Friends() {
                         </Box>
                         <IconButton
                           onClick={(e) => {
-                            e.preventDefault(); // Prevent Link navigation
-                            handleMenuOpen(e, friend.id);
+                            e.preventDefault();
+                            handleMenuOpen(e, friend.user_id);
                           }}
                           sx={{ position: 'absolute', top: 8, right: 8 }}
                         >
@@ -212,7 +204,6 @@ export default function Friends() {
         )}
       </Paper>
 
-      {/* Menu component */}
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
