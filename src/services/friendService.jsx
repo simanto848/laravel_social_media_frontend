@@ -9,7 +9,7 @@ const friendService = {
         },
       });
       const data = await response.json();
-      return data;
+      return response.ok && data;
     } catch (error) {
       return { status: false, message: 'Network error', error: error.message };
     }
@@ -25,7 +25,7 @@ const friendService = {
         },
       });
       const data = await response.json();
-      return data;
+      return response.ok && data;
     } catch (error) {
       return { status: false, message: 'Network error', error: error.message };
     }
@@ -43,9 +43,7 @@ const friendService = {
         }
       );
       const data = await response.json();
-      return response.ok
-        ? { status: true, data }
-        : { status: false, message: data.message };
+      return response.ok && data;
     } catch (error) {
       return { status: false, message: 'Network error', error: error.message };
     }
@@ -63,9 +61,7 @@ const friendService = {
         }
       );
       const data = await response.json();
-      return response.ok
-        ? { status: true, data }
-        : { status: false, message: data.message };
+      return response.ok && data;
     } catch (error) {
       return { status: false, message: 'Network error', error: error.message };
     }
@@ -80,9 +76,7 @@ const friendService = {
         },
       });
       const data = await response.json();
-      return response.ok
-        ? { status: true, data }
-        : { status: false, message: data.message };
+      return response.ok && data;
     } catch (error) {
       return { status: false, message: 'Network error', error: error.message };
     }
@@ -96,9 +90,7 @@ const friendService = {
         },
       });
       const data = await response.json();
-      return response.ok
-        ? { status: true, data }
-        : { status: false, message: data.message };
+      return response.ok && data;
     } catch (error) {
       return { status: false, message: 'Network error', error: error.message };
     }

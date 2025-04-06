@@ -80,8 +80,9 @@ export default function Profile() {
     const userProfileData = await profileService.getProfileByUsername(
       visitedUsername
     );
+
     if (userProfileData.status) {
-      const userData = userProfileData.data.data;
+      const userData = userProfileData.data;
 
       setProfileData(userData);
       if (
@@ -111,7 +112,7 @@ export default function Profile() {
         console.log(response);
 
         if (response?.status) {
-          const friendship = response.data?.data;
+          const friendship = response?.data;
 
           if (!friendship) {
             setFriendshipStatus('none');
@@ -155,7 +156,7 @@ export default function Profile() {
       );
       if (response.status) {
         setFriendshipStatus('pending_sent');
-        toast.success('Friend request sent!');
+        toast.success(response.message || 'Friend request sent!');
       } else {
         toast.error(response.message || 'Failed to send friend request');
       }
@@ -173,7 +174,7 @@ export default function Profile() {
       const response = await friendService.acceptFriendRequest(friendshipId);
       if (response.status) {
         setFriendshipStatus('friends');
-        toast.success('Friend request accepted!');
+        toast.success(response.message || 'Friend request accepted!');
       } else {
         toast.error(response.message || 'Failed to accept friend request');
       }
@@ -191,7 +192,7 @@ export default function Profile() {
       const response = await friendService.rejectFriendRequest(friendshipId);
       if (response.status) {
         setFriendshipStatus('none');
-        toast.success('Friend request rejected');
+        toast.success(response.message || 'Friend request rejected');
       } else {
         toast.error(response.message || 'Failed to reject friend request');
       }
@@ -209,7 +210,7 @@ export default function Profile() {
       const response = await friendService.rejectFriendRequest(friendshipId);
       if (response.status) {
         setFriendshipStatus('none');
-        toast.success('Friend request unsent');
+        toast.success(response.message || 'Cancel Friend request');
       } else {
         toast.error(response.message || 'Failed to unsend friend request');
       }
@@ -221,6 +222,7 @@ export default function Profile() {
     }
   };
 
+  // Not implemented yet
   const handleMessageClick = () => {
     // Navigate to messages with this user
     navigate(`/messages/${profileData.user.id}`);

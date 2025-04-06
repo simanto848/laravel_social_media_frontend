@@ -3,9 +3,7 @@ const profileService = {
     try {
       const response = await fetch(`/api/profile/${userId}`);
       const data = await response.json();
-      return response.ok
-        ? { status: true, data }
-        : { status: false, message: data.message };
+      return response.ok && data;
     } catch (error) {
       return { status: false, message: 'Network error', error: error.message };
     }
@@ -15,15 +13,13 @@ const profileService = {
     try {
       const response = await fetch(`/api/profile/username/${username}`);
       const data = await response.json();
-      return response.ok
-        ? { status: true, data }
-        : { status: false, message: data.message };
+      return response.ok && data;
     } catch (error) {
       return { status: false, message: 'Network error', error: error.message };
     }
   },
 
-  async updateNames(data) {
+  async updateNames(payloads) {
     try {
       const response = await fetch(`/api/profile/names`, {
         method: 'PUT',
@@ -31,18 +27,16 @@ const profileService = {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payloads),
       });
-      const result = await response.json();
-      return response.ok
-        ? { status: true, data: result }
-        : { status: false, message: result.message };
+      const data = await response.json();
+      return response.ok && data;
     } catch (error) {
       return { status: false, message: 'Network error', error: error.message };
     }
   },
 
-  async updateOthers(data) {
+  async updateOthers(payloads) {
     try {
       const response = await fetch(`/api/profile/details`, {
         method: 'PUT',
@@ -50,18 +44,16 @@ const profileService = {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payloads),
       });
-      const result = await response.json();
-      return response.ok
-        ? { status: true, data: result }
-        : { status: false, message: result.message };
+      const data = await response.json();
+      return response.ok && data;
     } catch (error) {
       return { status: false, message: 'Network error', error: error.message };
     }
   },
 
-  async updateProfile(data) {
+  async updateProfile(payloads) {
     try {
       const response = await fetch(`/api/profile/details`, {
         method: 'PUT',
@@ -69,18 +61,16 @@ const profileService = {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payloads),
       });
-      const result = await response.json();
-      return response.ok
-        ? { status: true, data: result }
-        : { status: false, message: result.message };
+      const data = await response.json();
+      return response.ok && data;
     } catch (error) {
       return { status: false, message: 'Network error', error: error.message };
     }
   },
 
-  async updateUserInfo(data) {
+  async updateUserInfo(payloads) {
     try {
       const response = await fetch(`/api/profile/user-info`, {
         method: 'PUT',
@@ -88,18 +78,16 @@ const profileService = {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payloads),
       });
-      const result = await response.json();
-      return response.ok
-        ? { status: true, data: result }
-        : { status: false, message: result.message };
+      const data = await response.json();
+      return response.ok && data;
     } catch (error) {
       return { status: false, message: 'Network error', error: error.message };
     }
   },
 
-  async updatePassword(data) {
+  async updatePassword(payloads) {
     try {
       const response = await fetch(`/api/profile/password`, {
         method: 'PUT',
@@ -107,12 +95,10 @@ const profileService = {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payloads),
       });
-      const result = await response.json();
-      return response.ok
-        ? { status: true, data: result }
-        : { status: false, message: result.message };
+      const data = await response.json();
+      return response.ok && data;
     } catch (error) {
       return { status: false, message: 'Network error', error: error.message };
     }
@@ -145,10 +131,8 @@ const profileService = {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
-      const result = await response.json();
-      return response.ok
-        ? { status: true, data: result }
-        : { status: false, message: result.message };
+      const data = await response.json();
+      return response.ok && data;
     } catch (error) {
       return { status: false, message: 'Network error', error: error.message };
     }

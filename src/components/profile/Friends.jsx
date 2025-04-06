@@ -27,16 +27,12 @@ export default function Friends() {
     fetchFriends();
   }, []);
 
-  useEffect(() => {
-    console.log('Friends: ', friends);
-  }, [friends]);
-
   const fetchFriends = async () => {
     try {
       setLoading(true);
       const response = await friendService.getFriendList();
       if (response.status) {
-        setFriends(response.data.data || []);
+        setFriends(response.data || []);
       } else {
         toast.error(response.message || 'Error fetching friends');
       }
