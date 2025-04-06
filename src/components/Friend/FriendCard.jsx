@@ -13,17 +13,25 @@ import {
 } from '@mui/material';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import CloseIcon from '@mui/icons-material/Close';
+import CheckIcon from '@mui/icons-material/Check';
 import friendService from '../../services/friendService';
 
-export default function FriendCard({ userList, onFriendRequestSent }) {
+export default function FriendCard({
+  userList,
+  isFriendRequest = false,
+  onFriendRequestSent,
+  onFriendRequestAction,
+}) {
   const [isLoading, setIsLoading] = useState(false);
-  const hadnleAddFriend = async (friendId) => {
+
+  // Handle sending a friend request (for suggested friends)
+  const handleAddFriend = async (friendId) => {
     setIsLoading(true);
     try {
       const response = await friendService.sendFriendRequest(friendId);
       if (response.status) {
-        toast.success(response.message);
-        onFriendRequestSent();
+        toast.success(response.message || 'Friend request sent!');
+        if (onFriendRequestSent) onFriendRequestSent();
       } else {
         toast.error(response.message);
       }
@@ -33,6 +41,43 @@ export default function FriendCard({ userList, onFriendRequestSent }) {
       setIsLoading(false);
     }
   };
+
+  // Handle accepting a friend request
+  const handleAcceptFriendRequest = async (friendShipId) => {
+    setIsLoading(true);
+    try {
+      const response = await friendService.acceptFriendRequest(friendShipId);
+      if (response.status) {
+        toast.success(response.message || 'Friend request accepted!');
+        if (onFriendRequestAction) onFriendRequestAction();
+      } else {
+        toast.error(response.message);
+      }
+    } catch (error) {
+      toast.error(error.message || 'Failed to accept friend request');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle rejecting a friend request
+  const handleRejectFriendRequest = async (friendShipId) => {
+    setIsLoading(true);
+    try {
+      const response = await friendService.rejectFriendRequest(friendShipId);
+      if (response.status) {
+        toast.success(response.message || 'Friend request rejected!');
+        if (onFriendRequestAction) onFriendRequestAction();
+      } else {
+        toast.error(response.message);
+      }
+    } catch (error) {
+      toast.error(error.message || 'Failed to reject friend request');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -44,7 +89,7 @@ export default function FriendCard({ userList, onFriendRequestSent }) {
     >
       {userList.map((user) => (
         <Card
-          key={user.id}
+          key={user.user_id} // Use user_id as the key for consistency
           sx={{
             width: 250,
             borderRadius: 2,
@@ -81,7 +126,7 @@ export default function FriendCard({ userList, onFriendRequestSent }) {
                     ? `http://localhost:8000/storage/${user.image.path}`
                     : ''
                 }
-                alt={user.first_name + ' ' + user.last_name}
+                alt={`${user.first_name} ${user.last_name}`}
                 sx={{
                   width: 100,
                   height: 100,
@@ -97,8 +142,6 @@ export default function FriendCard({ userList, onFriendRequestSent }) {
               >
                 {user.first_name} {user.last_name}
               </Typography>
-
-              {/* Will be working on this part later */}
               <Typography
                 variant="body2"
                 color="text.secondary"
@@ -115,23 +158,62 @@ export default function FriendCard({ userList, onFriendRequestSent }) {
           <CardActions
             sx={{ p: 2, pt: 0, display: 'flex', justifyContent: 'center' }}
           >
-            <Button
-              variant="contained"
-              disabled={isLoading}
-              startIcon={<PersonAddIcon />}
-              fullWidth
-              onClick={() => hadnleAddFriend(user.user_id)}
-              sx={{
-                bgcolor: '#1877f2',
-                '&:hover': { bgcolor: '#166fe5' },
-                borderRadius: 3,
-                textTransform: 'none',
-                fontWeight: 'bold',
-                py: 1,
-              }}
-            >
-              {isLoading ? 'Sending...' : 'Add Friend'}
-            </Button>
+            {isFriendRequest ? (
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button
+                  variant="contained"
+                  disabled={isLoading}
+                  startIcon={<CheckIcon />}
+                  onClick={() => handleAcceptFriendRequest(user.friendShipId)}
+                  sx={{
+                    bgcolor: '#1877f2',
+                    '&:hover': { bgcolor: '#166fe5' },
+                    borderRadius: 3,
+                    textTransform: 'none',
+                    fontWeight: 'bold',
+                    py: 1,
+                    px: 2,
+                  }}
+                >
+                  {isLoading ? 'Processing...' : 'Accept'}
+                </Button>
+                <Button
+                  variant="outlined"
+                  disabled={isLoading}
+                  onClick={() => handleRejectFriendRequest(user.friendShipId)}
+                  sx={{
+                    borderColor: '#d32f2f',
+                    color: '#d32f2f',
+                    '&:hover': { borderColor: '#b71c1c', color: '#b71c1c' },
+                    borderRadius: 3,
+                    textTransform: 'none',
+                    fontWeight: 'bold',
+                    py: 1,
+                    px: 2,
+                  }}
+                >
+                  {isLoading ? 'Processing...' : 'Reject'}
+                </Button>
+              </Box>
+            ) : (
+              <Button
+                variant="contained"
+                disabled={isLoading}
+                startIcon={<PersonAddIcon />}
+                fullWidth
+                onClick={() => handleAddFriend(user.user_id)}
+                sx={{
+                  bgcolor: '#1877f2',
+                  '&:hover': { bgcolor: '#166fe5' },
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  fontWeight: 'bold',
+                  py: 1,
+                }}
+              >
+                {isLoading ? 'Sending...' : 'Add Friend'}
+              </Button>
+            )}
           </CardActions>
         </Card>
       ))}

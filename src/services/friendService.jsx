@@ -105,8 +105,21 @@ const friendService = {
         },
       });
       const data = await response.json();
-      console.log('From FriendService: ', data);
 
+      return response.ok && data;
+    } catch (error) {
+      return { status: false, message: 'Network error', error: error.message };
+    }
+  },
+
+  async getFriendRequests() {
+    try {
+      const response = await fetch('/api/friends/requests', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      const data = await response.json();
       return response.ok && data;
     } catch (error) {
       return { status: false, message: 'Network error', error: error.message };

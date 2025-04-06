@@ -7,7 +7,15 @@ import { AppContext } from '../Context/AppContext';
 
 export default function FindFriend() {
   const [SuggestFriends, setSuggestFriends] = useState([]);
+  const [friendRequests, setFriendRequests] = useState([]);
   const { user } = useContext(AppContext);
+
+  useEffect(() => {
+    if (user.id) {
+      fetchSuggestFriends();
+      fetchFriendRequests();
+    }
+  }, [user.id]);
 
   const fetchSuggestFriends = async () => {
     try {
@@ -22,18 +30,50 @@ export default function FindFriend() {
     }
   };
 
+  const fetchFriendRequests = async () => {
+    try {
+      const response = await friendService.getFriendRequests();
+      if (response.status) {
+        setFriendRequests(response.data);
+      }
+    } catch (error) {
+      toast.error(error.message || 'Failed to fetch friend requests');
+    }
+  };
+
   const onFriendRequestSent = () => {
     fetchSuggestFriends();
   };
 
-  useEffect(() => {
-    fetchSuggestFriends();
-  }, [user.id]);
+  const onFriendRequestAction = () => {
+    fetchFriendRequests(); // Refresh friend requests after accepting/rejecting
+  };
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
-      {' '}
-      {/* Change back to md */}
+      <Typography variant="h4" fontWeight="bold" color="#1877f2" sx={{ mb: 2 }}>
+        Friend Requests
+      </Typography>
+      <Divider sx={{ mb: 3 }} />
+      <Box
+        sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+      >
+        {friendRequests.length > 0 ? (
+          <FriendCard
+            userList={friendRequests.map((request) => ({
+              ...request.user.profile,
+              user_id: request.user.id,
+              friendShipId: request.id,
+            }))}
+            isFriendRequest={true}
+            onFriendRequestAction={onFriendRequestAction}
+          />
+        ) : (
+          <Typography variant="body1" color="text.secondary">
+            No friend requests at this time.
+          </Typography>
+        )}
+      </Box>
       <Typography variant="h4" fontWeight="bold" color="#1877f2" sx={{ mb: 2 }}>
         People You May Know
       </Typography>
